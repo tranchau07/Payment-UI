@@ -74,7 +74,7 @@ const CreateCardForm = ({ contractIdentifier, onComplete }) => {
   const currentError = persistedError;
 
   if (currentResult || currentError) {
-    const isSuccess = currentResult && (currentResult.success || currentResult.retCode === 0);
+    const isSuccess = !!currentResult && !currentError;
     return (
       <div className="form-container card result-view">
         <div className={`success-header ${isSuccess ? '' : 'error-header'}`}>

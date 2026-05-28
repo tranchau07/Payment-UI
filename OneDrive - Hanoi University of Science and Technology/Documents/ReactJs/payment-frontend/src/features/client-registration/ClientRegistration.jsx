@@ -121,26 +121,21 @@ export default function ClientRegistration({ onComplete }) {
       const response = await registrationApi.execute(formattedData);
       const serverResponse = response.data;
 
-      if (serverResponse.retCode === 0) {
-        console.log(`[Registration Success] Client ID: ${serverResponse.newClientId}, App Number: ${serverResponse.applicationNumber}`);
-        setSubmittedValues({
-          ...formattedData,
-          serverResponse
-        });
-        setLocalError('');
-        setContractCreationResponse(serverResponse);
-        setShowContractForm(true);
-      } else {
-        console.warn(`[Registration Failed] Code: ${serverResponse.retCode}, Message: ${serverResponse.retMsg}`);
-        setLocalError(serverResponse.retMsg || 'Đăng ký không thành công từ máy chủ.');
-        setSubmittedValues(null);
-        setContractCreationResponse(null);
-        setShowContractForm(false);
-      }
+      console.log(`[Registration Success] Client ID: ${serverResponse.newClientId}, App Number: ${serverResponse.applicationNumber}`);
+      setSubmittedValues({
+        ...formattedData,
+        serverResponse
+      });
+      setLocalError('');
+      setContractCreationResponse(serverResponse);
+      setShowContractForm(true);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Đăng ký thất bại. Vui lòng thử lại.';
       console.error('[Registration Error]', errorMessage);
       setLocalError(errorMessage);
+      setSubmittedValues(null);
+      setContractCreationResponse(null);
+      setShowContractForm(false);
     }
   };
 

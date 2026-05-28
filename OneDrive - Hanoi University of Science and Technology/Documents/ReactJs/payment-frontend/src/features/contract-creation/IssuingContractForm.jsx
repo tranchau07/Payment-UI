@@ -78,23 +78,15 @@ export default function IssuingContractForm({ newClientId, contractCreationStatu
       const response = await createContractApi.execute(finalContractData);
       const serverResponse = response.data;
 
-      if (serverResponse.retCode === 0 && serverResponse.success) {
-        // Robustly find the contract number
-        const contractNum = serverResponse.contractNumber || serverResponse.data?.contractNumber;
-        
-        if (contractNum) {
-          console.log('[Contract Creation Success] Found Contract Number:', contractNum);
-          setCreatedContractNumber(contractNum);
-          setStep(2);
-        } else {
-          console.error("Contract creation successful, but 'contractNumber' not found in response:", serverResponse);
-          setFormError("Tạo hợp đồng thành công nhưng không tìm thấy mã hợp đồng để tiếp tục.");
-        }
+      const contractNum = serverResponse.contractNumber || serverResponse.data?.contractNumber;
+      
+      if (contractNum) {
+        console.log('[Contract Creation Success] Found Contract Number:', contractNum);
+        setCreatedContractNumber(contractNum);
+        setStep(2);
       } else {
-        const errorMessage = serverResponse.retMsg || 'Tạo hợp đồng không thành công.';
-        console.warn(`[Contract Creation Failed] Code: ${serverResponse.retCode}, Message: ${errorMessage}`);
-        setFormError(errorMessage);
-        if (onContractCreated) onContractCreated({ success: false, error: errorMessage });
+        console.error("Contract creation successful, but 'contractNumber' not found in response:", serverResponse);
+        setFormError("Tạo hợp đồng thành công nhưng không tìm thấy mã hợp đồng để tiếp tục.");
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Lỗi khi tạo hợp đồng. Vui lòng thử lại.';
