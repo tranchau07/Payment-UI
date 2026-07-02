@@ -15,7 +15,7 @@ export function useApi(apiFn) {
         setData(response.data);
         return response;
       } catch (err) {
-        setError(err.response?.data?.message || err.message || 'Lỗi khi gọi API');
+        setError(err.response?.data?.message || 'Không thể kết nối đến hệ thống. Vui lòng thử lại.');
         throw err;
       } finally {
         setLoading(false);

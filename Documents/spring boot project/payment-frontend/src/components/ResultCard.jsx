@@ -17,23 +17,86 @@ export default function ResultCard({ title, content, onAction }) {
           <div className="result-section server-response">
             <h4>Kết quả từ máy chủ</h4>
             <div className="result-grid">
-              <div className="result-item">
-                <span className="label">Mã khách hàng mới:</span>
-                <span className="value">{serverResponse.newClientId || 'N/A'}</span>
-              </div>
-              <div className="result-item">
-                <span className="label">Số đơn đăng ký:</span>
-                <span className="value">{serverResponse.applicationNumber || 'N/A'}</span>
-              </div>
-              {serverResponse.contractCreationStatus && (
-                <div className="result-item full-width highlight">
-                  <span className="label">Hợp đồng trách nhiệm (Way4):</span>
-                  <span className="value">{serverResponse.contractCreationStatus}</span>
-                </div>
+              {Object.hasOwn(serverResponse, 'newMerchantId') ? (
+                <>
+                  <div className="result-item">
+                    <span className="label">NewClient (Mã Merchant mới):</span>
+                    <span className="value">{serverResponse.newMerchantId || 'N/A'}</span>
+                  </div>
+                  <div className="result-item">
+                    <span className="label">RetCode (Mã kết quả):</span>
+                    <span className="value">{serverResponse.retCode !== undefined && serverResponse.retCode !== null ? serverResponse.retCode : 'N/A'}</span>
+                  </div>
+                  <div className="result-item full-width">
+                    <span className="label">RetMsg (Thông điệp phản hồi):</span>
+                    <span className="value">{serverResponse.retMsg || 'N/A'}</span>
+                  </div>
+                  <div className="result-item full-width">
+                    <span className="label">ResultInfo (Thông tin bổ sung):</span>
+                    <span className="value">{serverResponse.resultInfo || 'N/A'}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="result-item">
+                    <span className="label">Mã khách hàng mới:</span>
+                    <span className="value">{serverResponse.newClientId || 'N/A'}</span>
+                  </div>
+                  <div className="result-item">
+                    <span className="label">Số đơn đăng ký:</span>
+                    <span className="value">{serverResponse.applicationNumber || 'N/A'}</span>
+                  </div>
+                  {serverResponse.contractCreationStatus && (
+                    <div className="result-item full-width highlight">
+                      <span className="label">Hợp đồng bảo đảm:</span>
+                      <span className="value">{serverResponse.contractCreationStatus}</span>
+                    </div>
+                  )}
+                  <div className="result-item full-width">
+                    <span className="label">Thông báo:</span>
+                    <span className="value">{serverResponse.resultInfo || serverResponse.retMsg}</span>
+                  </div>
+                </>
               )}
-              <div className="result-item full-width">
-                <span className="label">Thông báo:</span>
-                <span className="value">{serverResponse.resultInfo || serverResponse.retMsg}</span>
+            </div>
+          </div>
+        )}
+
+        {serverResponse && Object.hasOwn(serverResponse, 'newMerchantId') && (
+          <div className="result-section">
+            <h4>Thông tin Merchant đã đăng ký</h4>
+            <div className="result-grid">
+              <div className="result-item">
+                <span className="label">Tên công ty:</span>
+                <span className="value">{content.companyName}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Tên thương mại:</span>
+                <span className="value">{content.tradeName}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Tên viết tắt:</span>
+                <span className="value">{content.shortName}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Mã Merchant (Client Number):</span>
+                <span className="value">{content.clientNumber}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Mã số thuế (TIN):</span>
+                <span className="value">{content.tin}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Số điện thoại:</span>
+                <span className="value">{content.phone || content.mobilePhone}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Email:</span>
+                <span className="value">{content.email}</span>
+              </div>
+              <div className="result-item">
+                <span className="label">Website:</span>
+                <span className="value">{content.url || 'N/A'}</span>
               </div>
             </div>
           </div>

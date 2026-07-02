@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSessionStorage } from '../../hooks/useSessionStorage';
 import ApiForm from '../../components/common/ApiForm';
 import { useApi } from '../../hooks/useApi';
 import { contractService } from '../../services/contractApi';
 import { branchService } from '../../services/branchApi';
+import { applProductService } from '../../services/applProductApi';
 import CreateCardForm from './CreateCardForm';
 
 const INITIAL_FORM_VALUES = {
@@ -36,10 +37,16 @@ export default function ContractCreation({ clientId, onComplete }) {
   const createLiabilityApi = useApi(contractService.createLiability);
   const createIssuingApi = useApi(contractService.createWithLiability);
   const allBranches = useApi(branchService.getAll);
+  const productsApi = useApi(applProductService.getAll);
 
-  const productOptions = [
-    { value: 'ISSUING_TRAINING01', label: 'Issuing Training' }
-  ];
+  const productOptions = useMemo(() => (productsApi.data || [])
+    .filter((p) =>
+      p.amndState === 'A' &&
+      p.isActive !== 'N' &&
+      !p.parentCode?.trim() &&
+      p.conCat === 'A' && p.pcat === 'C'
+    )
+    .map((p) => ({ value: p.code, label: p.name || p.code })), [productsApi.data]);
 
   const accessoryProductOptions = [
     { value: '', label: 'Không chọn' },
@@ -49,9 +56,11 @@ export default function ContractCreation({ clientId, onComplete }) {
 
   useEffect(() => {
     allBranches.execute();
+    productsApi.execute();
 
     // Reset state for new clientId to prevent carrying over step/form values from previous sessions
     setContractResponse(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setExistingLiability(null);
     
     const initialValues = {
@@ -161,7 +170,7 @@ export default function ContractCreation({ clientId, onComplete }) {
         setStep(3);
         setLocalError('');
       } else {
-        setLocalError(serverResponse.retMsg || 'Có lỗi xảy ra từ hệ thống Core Way4.');
+        setLocalError(serverResponse.retMsg || 'Hệ thống xử lý giao dịch gặp lỗi.');
       }
     } catch (err) {
       if (err.response && err.response.status === 400) {
@@ -185,21 +194,21 @@ export default function ContractCreation({ clientId, onComplete }) {
   const liabilityFields = [
     {
       name: 'clientIdentifier',
-      label: 'ID Khách hàng',
+      label: 'Mã khách hàng',
       type: 'input',
       inputType: 'text',
       disabled: true,
     },
     {
       name: 'cbsNumber',
-      label: 'Số tài khoản CBS (CASA)',
+      label: 'Số tài khoản liên kết',
       type: 'input',
       inputType: 'text',
       placeholder: 'Nhập số tài khoản thanh toán trích nợ',
       validation: { 
         required: true, 
         pattern: /^\d+$/, 
-        message: 'Tài khoản CBS là bắt buộc và chỉ chứa số' 
+        message: 'Tài khoản liên kết là bắt buộc và chỉ chứa số' 
       },
     }
   ];
@@ -207,14 +216,14 @@ export default function ContractCreation({ clientId, onComplete }) {
   const issuingFields = [
     {
       name: 'clientIdentifier',
-      label: 'ID Khách hàng',
+      label: 'Mã khách hàng',
       type: 'input',
       inputType: 'text',
       disabled: true,
     },
     {
       name: 'liabContractIdentifier',
-      label: 'ID Hợp đồng bảo lãnh (Liability)',
+      label: 'Mã hợp đồng bảo lãnh',
       type: 'input',
       inputType: 'text',
       disabled: true,
@@ -252,7 +261,7 @@ export default function ContractCreation({ clientId, onComplete }) {
     },
     {
       name: 'cbsNumber',
-      label: 'Tài khoản CBS (CASA)',
+      label: 'Tài khoản liên kết',
       type: 'input',
       inputType: 'text',
       disabled: true,
@@ -273,7 +282,7 @@ export default function ContractCreation({ clientId, onComplete }) {
     },
     {
       name: 'addInfo01',
-      label: 'Mã NV Tiếp thị (AddInfo01)',
+      label: 'Mã nhân viên tiếp thị',
       type: 'input',
       inputType: 'text',
       placeholder: 'Mã CBNV',
@@ -314,7 +323,7 @@ export default function ContractCreation({ clientId, onComplete }) {
       {existingLiability && step === 2 && (
         <div className="info-banner">
           <span>
-            🏛️ Hệ thống tìm thấy hợp đồng bảo lãnh đang hoạt động: <strong>{existingLiability.contractNumber}</strong> (CBS: {existingLiability.cbsNumber})
+            Hệ thống tìm thấy hợp đồng bảo lãnh đang hoạt động: <strong>{existingLiability.contractNumber}</strong> (Tài khoản: {existingLiability.cbsNumber})
           </span>
           <button 
             type="button" 
@@ -333,7 +342,7 @@ export default function ContractCreation({ clientId, onComplete }) {
       <div className="form-container card" style={{ position: 'relative' }}>
         {isLoading && (
           <div className="loading-overlay">
-            <div className="spinner">Đang xử lý giao dịch với Core WAY4...</div>
+            <div className="spinner">Đang xử lý giao dịch...</div>
           </div>
         )}
 

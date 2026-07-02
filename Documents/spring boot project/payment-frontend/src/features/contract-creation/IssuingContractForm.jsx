@@ -112,14 +112,14 @@ export default function IssuingContractForm({ newClientId, contractCreationStatu
     { name: 'contractName', label: 'Tên hợp đồng', type: 'text', readOnly: true },
     {
       name: 'cbsNumber',
-      label: 'Số CBS',
+      label: 'Số tài khoản liên kết',
       type: 'text',
       inputType: 'number',
-      placeholder: 'Nhập số CBS',
+      placeholder: 'Nhập số tài khoản liên kết',
       validation: {
         required: true,
         pattern: /^\d+$/,
-        message: 'Số CBS phải là số và không được để trống'
+        message: 'Số tài khoản liên kết phải là số và không được để trống'
       }
     },
   ];

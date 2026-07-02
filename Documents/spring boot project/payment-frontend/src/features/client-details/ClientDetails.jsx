@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { clientService } from '../../services/clientApi';
+import TransactionHistory from './TransactionHistory';
 
 const formatGender = (gender) => {
   if (gender === 'M') return 'Nam';
@@ -43,16 +44,16 @@ const MiniatureCard = ({ card }) => {
       </div>
       <div className="card-middle">
         <div className="card-info-item">
-          <span className="card-info-label">CARDHOLDER</span>
-          <span className="card-info-value">{card.contractName?.toUpperCase() || 'CLIENT NAME'}</span>
+          <span className="card-info-label">CHỦ THẺ</span>
+          <span className="card-info-value">{card.contractName?.toUpperCase() || 'CHƯA CÓ TÊN'}</span>
         </div>
         <div className="card-info-item">
-          <span className="card-info-label">EXPIRES</span>
+          <span className="card-info-label">HẾT HẠN</span>
           <span className="card-info-value">{formatDate(card.dateExpire).substring(3, 10) || 'N/A'}</span>
         </div>
       </div>
       <div className="card-bottom">
-        <div className="card-product-tag" title="Mã sản phẩm thẻ">{card.productCode || 'CARD_TRAINING'}</div>
+        {card.productCode && <div className="card-product-tag" title="Mã sản phẩm thẻ">{card.productCode}</div>}
         <div className="card-balance-tag" title="Số dư thẻ">
           {card.totalBalance !== undefined ? card.totalBalance.toLocaleString() : '0'} {card.curr || 'VND'}
         </div>
@@ -61,17 +62,20 @@ const MiniatureCard = ({ card }) => {
   );
 };
 
-export default function ClientDetails({ clientId, onBack }) {
+export default function ClientDetails({ clientId, isMerchant = false, onBack, onCreateDevice, onCreateContract }) {
   const getHierarchyApi = useApi(clientService.getHierarchy);
   
   // State to track collapsed panels
   const [collapsedLiab, setCollapsedLiab] = useState({});
   const [collapsedIssuing, setCollapsedIssuing] = useState({});
+  const [collapsedAcq, setCollapsedAcq] = useState({});
 
   useEffect(() => {
     if (clientId) {
       getHierarchyApi.execute(clientId);
     }
+    // Reload hierarchy whenever the selected client changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
 
   if (getHierarchyApi.loading) {
@@ -105,14 +109,18 @@ export default function ClientDetails({ clientId, onBack }) {
   const liabilities = contracts.filter(c => c.productType === 'LIABILITY');
   const issuingList = contracts.filter(c => c.productType === 'ISSUING');
   const cardsList = contracts.filter(c => c.productType === 'CARD');
+  const acquiringList = contracts.filter(c => c.productType === 'ACQUIRING');
+  const devicesList = contracts.filter(c => c.productType === 'DEVICE');
   const unknownList = contracts.filter(c => c.productType === 'UNKNOWN');
 
   const liabilityIds = new Set(liabilities.map(l => l.id));
   const issuingIds = new Set(issuingList.map(i => i.id));
+  const acquiringIds = new Set(acquiringList.map(a => a.id));
 
   // Children maps
   const liabilityMap = {}; // liabilityId -> issuing list
   const issuingMap = {};   // issuingId -> card list
+  const acquiringMap = {}; // acquiringId -> device list
   
   const orphanIssuings = [];
   const orphanCards = [];
@@ -139,6 +147,15 @@ export default function ClientDetails({ clientId, onBack }) {
     }
   });
 
+  // Group Devices
+  devicesList.forEach(device => {
+    const parentId = device.parentId;
+    if (parentId && acquiringIds.has(parentId)) {
+      if (!acquiringMap[parentId]) acquiringMap[parentId] = [];
+      acquiringMap[parentId].push(device);
+    }
+  });
+
   const toggleLiab = (id) => {
     setCollapsedLiab(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -147,21 +164,27 @@ export default function ClientDetails({ clientId, onBack }) {
     setCollapsedIssuing(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const toggleAcq = (id) => {
+    setCollapsedAcq(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const hasContracts = contracts.length > 0;
 
   return (
     <section id="api-calls">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h2>Thông Tin Chi Tiết Khách Hàng</h2>
-          <p className="section-description" style={{ margin: 0 }}>
-            Quản lý chi tiết hồ sơ cá nhân và danh sách hợp đồng, thẻ phát hành của khách hàng.
-          </p>
-        </div>
-        <button className="back-button" style={{ margin: 0 }} onClick={onBack}>
+      <div className="page-header-container" style={{ marginBottom: '24px' }}>
+        <h2>{isMerchant ? 'Thông Tin Chi Tiết Merchant' : 'Thông Tin Chi Tiết Khách Hàng'}</h2>
+        <p className="section-description">
+          {isMerchant
+            ? 'Quản lý hồ sơ Merchant, hợp đồng Acquiring và các Device POS/Terminal trực thuộc.'
+            : 'Quản lý chi tiết hồ sơ cá nhân và danh sách hợp đồng, thẻ phát hành của khách hàng.'}
+        </p>
+        <button className="back-button" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', margin: 0 }} onClick={onBack}>
           Quay lại danh sách
         </button>
       </div>
+
+
 
       {/* Customer Profile Card */}
       <div className="form-container card" style={{ padding: '24px', marginBottom: '32px' }}>
@@ -242,19 +265,193 @@ export default function ClientDetails({ clientId, onBack }) {
       {/* Owned Contracts & Cards Section */}
       <div className="form-container card" style={{ padding: '32px' }}>
         <h3 style={{ textAlign: 'left', marginTop: 0, marginBottom: '8px', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          💳 Danh Sách Hợp Đồng & Thẻ Sở Hữu
+          {isMerchant ? '🏪 Hợp Đồng Acquiring & Device' : '💳 Danh Sách Hợp Đồng & Thẻ Sở Hữu'}
         </h3>
         <p className="section-description" style={{ textAlign: 'left', margin: '0 0 24px 0' }}>
-          Quản lý theo mô hình phân cấp: Hợp đồng Bảo lãnh (CASA/CBS) → Hợp đồng Phát hành (Issuing) → Các thẻ (Card) liên kết.
+          {isMerchant
+            ? 'Mỗi hợp đồng Acquiring có thể quản lý nhiều Device POS/Terminal. Chọn “+ Thêm Device” tại hợp đồng tương ứng.'
+            : 'Quản lý theo mô hình phân cấp: Hợp đồng bảo lãnh → Hợp đồng phát hành → Các thẻ liên kết.'}
         </p>
 
         {!hasContracts ? (
-          <div className="no-data" style={{ padding: '30px', borderStyle: 'dashed' }}>
-            Khách hàng này chưa có bất kỳ hợp đồng hay thẻ nào được đăng ký trên hệ thống.
-          </div>
+          isMerchant ? (
+            <div className="no-data" style={{ padding: '24px', borderStyle: 'dashed', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                Merchant này chưa có Acquiring Contract đang hoạt động. Hãy tạo hợp đồng trước khi thêm Device.
+              </span>
+              <button
+                className="submit-button"
+                style={{
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+                onClick={() => onCreateContract?.(client.id)}
+              >
+                + Tạo Hợp Đồng Acquiring
+              </button>
+            </div>
+          ) : (
+            <div className="no-data" style={{ padding: '30px', borderStyle: 'dashed' }}>
+              Khách hàng này chưa có bất kỳ hợp đồng hay thẻ nào được đăng ký trên hệ thống.
+            </div>
+          )
         ) : (
           <div className="hierarchy-container">
-            {/* 1. LIABILITY CONTRACTS SECTION */}
+            {isMerchant && acquiringList.length === 0 && (
+              <div className="no-data" style={{ padding: '24px', borderStyle: 'dashed', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                  Merchant này chưa có Acquiring Contract đang hoạt động. Hãy tạo hợp đồng trước khi thêm Device.
+                </span>
+                <button
+                  className="submit-button"
+                  style={{
+                    background: 'var(--accent)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                  onClick={() => onCreateContract?.(client.id)}
+                >
+                  + Tạo Hợp Đồng Acquiring
+                </button>
+              </div>
+            )}
+            {/* 1a. ACQUIRING CONTRACTS SECTION */}
+            {acquiringList.map(acq => {
+              const isCollapsed = collapsedAcq[acq.id];
+              const childDevices = acquiringMap[acq.id] || [];
+              
+              return (
+                <div key={acq.id} className="liability-group-card" style={{ borderColor: '#10b981' }}>
+                  <div className="liability-header" onClick={() => toggleAcq(acq.id)} style={{ background: 'rgba(16, 185, 129, 0.05)' }}>
+                    <div className="liability-header-left">
+                      <span className="liability-badge" style={{ backgroundColor: '#10b981', color: '#fff' }}>Acquiring</span>
+                      <span className="liability-title">HĐ: {acq.contractNumber}</span>
+                      <span className={`arrow-toggle ${isCollapsed ? '' : 'open'}`}>▼</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }} onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        className="btn-add-device"
+                        style={{
+                          background: 'var(--accent)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          minWidth: '128px',
+                          height: '34px',
+                          padding: '0 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          boxShadow: 'var(--shadow-sm)'
+                        }}
+                        title="Thêm thiết bị (POS/Terminal)"
+                        onClick={() => onCreateDevice?.(acq.contractNumber, acq.productCode)}
+                      >
+                        + Thêm Device
+                      </button>
+                      {acq.totalBalance !== undefined && (
+                        <div className="liability-amount">
+                          Số dư: {acq.totalBalance.toLocaleString()} {acq.curr || 'VND'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {!isCollapsed && (
+                    <div className="liability-body">
+                      {/* Acquiring metadata */}
+                      <div className="metadata-grid">
+                        <div className="metadata-item">
+                          <span className="metadata-label">Tên hợp đồng</span>
+                          <span className="metadata-value">{acq.contractName || 'N/A'}</span>
+                        </div>
+                        <div className="metadata-item">
+                          <span className="metadata-label">Sản phẩm Acquiring</span>
+                          <span className="metadata-value code">{acq.productCode || 'N/A'}</span>
+                        </div>
+                        <div className="metadata-item">
+                          <span className="metadata-label">Tên sản phẩm</span>
+                          <span className="metadata-value">{acq.productName || 'N/A'}</span>
+                        </div>
+                        <div className="metadata-item">
+                          <span className="metadata-label">Ngày mở</span>
+                          <span className="metadata-value">{formatDate(acq.dateOpen)}</span>
+                        </div>
+                        <div className="metadata-item" style={{ gridColumn: 'span 2' }}>
+                          <span className="metadata-label">Địa chỉ hợp đồng</span>
+                          <span className="metadata-value">
+                            {acq.addressLine1 ? `${acq.addressLine1}${acq.city ? `, ${acq.city}` : ''}${acq.country ? `, ${acq.country}` : ''}` : 'Chưa khai báo địa chỉ'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Child Devices (POS/Terminal) */}
+                      <div style={{ marginTop: '20px' }}>
+                        <h4 style={{ color: 'var(--text-h)', margin: '0 0 12px 0', fontSize: '14px', borderLeft: '4px solid var(--accent)', paddingLeft: '8px' }}>
+                          Danh sách thiết bị (POS/Terminal) ({childDevices.length})
+                        </h4>
+                        {childDevices.length === 0 ? (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', padding: '10px 0' }}>
+                            Chưa có thiết bị nào được khai báo dưới hợp đồng này.
+                          </div>
+                        ) : (
+                          <div className="metadata-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', background: 'transparent', padding: 0 }}>
+                            {childDevices.map(device => (
+                              <div key={device.id} style={{ 
+                                padding: '16px', 
+                                border: '1px solid var(--border)', 
+                                borderRadius: '12px', 
+                                background: 'var(--card-bg, #fff)', 
+                                boxShadow: 'var(--shadow-sm)',
+                                position: 'relative'
+                              }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                  <span className="info-badge" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', fontWeight: 600, fontSize: '11px', padding: '2px 8px', borderRadius: '4px' }}>
+                                    POS/Terminal
+                                  </span>
+                                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                                    HĐ: {device.contractNumber}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '14px', color: 'var(--text-h)', fontWeight: 600, marginBottom: '8px' }}>
+                                  {device.contractName || 'POS Terminal'}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                  <div>
+                                    Mã sản phẩm: <span style={{ fontFamily: 'monospace', color: 'var(--text-h)', fontWeight: 500 }}>{device.productCode}</span>
+                                  </div>
+                                  <div>
+                                    Tiền tệ: <span style={{ color: 'var(--text-h)', fontWeight: 500 }}>{device.curr}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* 1b. LIABILITY CONTRACTS SECTION */}
             {liabilities.map(liab => {
               const isCollapsed = collapsedLiab[liab.id];
               const childIssuings = liabilityMap[liab.id] || [];
@@ -284,10 +481,10 @@ export default function ClientDetails({ clientId, onBack }) {
                         </div>
                         <div className="metadata-item">
                           <span className="metadata-label">Mã sản phẩm</span>
-                          <span className="metadata-value code">{liab.productCode || 'LIAB_TRAINING01'}</span>
+                          <span className="metadata-value code">{liab.productCode || 'Chưa xác định'}</span>
                         </div>
                         <div className="metadata-item">
-                          <span className="metadata-label">Tài khoản CASA (CBS)</span>
+                          <span className="metadata-label">Tài khoản liên kết</span>
                           <span className="metadata-value code">{liab.contractNumber || 'N/A'}</span>
                         </div>
                         <div className="metadata-item">
@@ -333,7 +530,7 @@ export default function ClientDetails({ clientId, onBack }) {
                                       </div>
                                       <div className="metadata-item">
                                         <span className="metadata-label">Sản phẩm phát hành</span>
-                                        <span className="metadata-value code">{issuing.productCode || 'ISSUING_TRAINING01'}</span>
+                                        <span className="metadata-value code">{issuing.productCode || 'Chưa xác định'}</span>
                                       </div>
                                       <div className="metadata-item">
                                         <span className="metadata-label">Hạn mức / Dư nợ</span>
@@ -408,7 +605,7 @@ export default function ClientDetails({ clientId, onBack }) {
                               </div>
                               <div className="metadata-item">
                                 <span className="metadata-label">Sản phẩm phát hành</span>
-                                <span className="metadata-value code">{issuing.productCode || 'ISSUING_TRAINING01'}</span>
+                                <span className="metadata-value code">{issuing.productCode || 'Chưa xác định'}</span>
                               </div>
                               <div className="metadata-item">
                                 <span className="metadata-label">Số dư khả dụng</span>
@@ -482,6 +679,8 @@ export default function ClientDetails({ clientId, onBack }) {
           </div>
         )}
       </div>
+
+      {hasContracts && <TransactionHistory contracts={contracts} />}
     </section>
   );
 }

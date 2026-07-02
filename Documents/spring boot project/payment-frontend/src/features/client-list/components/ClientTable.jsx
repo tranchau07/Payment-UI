@@ -38,7 +38,7 @@ export default function ClientTable({ clients, onCreateContract, onViewDetails }
         </thead>
         <tbody>
           {clients.map((client) => (
-            <tr key={client.clientNumber}>
+            <tr key={client.id}>
               <td>{client.clientNumber}</td>
               <td>{client.shortName}</td>
               <td>{formatGender(client.gender)}</td>

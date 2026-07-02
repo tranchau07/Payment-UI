@@ -1,0 +1,220 @@
+.transaction-journal-section {
+  width: 100%;
+}
+
+.doc-journal-toolbar {
+  padding: 20px;
+  background: var(--block);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.journal-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.filter-input-field.search-main {
+  grid-column: span 2;
+}
+
+.filter-actions-field {
+  grid-column: span 1;
+}
+
+.filter-input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.filter-input-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.journal-input {
+  height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.journal-input:focus {
+  border-color: var(--accent);
+}
+
+.search-input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.search-prefix-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input-with-icon .journal-input {
+  padding-left: 36px;
+}
+
+.filter-actions-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.filter-actions-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: transparent; /* hidden label spacing */
+}
+
+.action-buttons-wrap {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-journal-submit, 
+.btn-journal-reset {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  flex-grow: 1;
+}
+
+.btn-journal-submit {
+  background-color: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+}
+
+.btn-journal-submit:hover {
+  background-color: var(--accent-hover, #35495e);
+}
+
+.btn-journal-reset {
+  background-color: var(--bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.btn-journal-reset:hover {
+  background-color: var(--border);
+}
+
+/* Expanded Grid Layout for all 6 columns categories */
+.journal-expanded-content {
+  padding: 24px !important;
+  border: 1px solid var(--accent-border) !important;
+  background-color: var(--block) !important;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.expanded-title-heading {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--accent-border);
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.expanded-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.expanded-card-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.expanded-card-block h6 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 8px 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.journal-table td.code {
+  font-family: monospace;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1200px) {
+  .journal-filters-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .filter-actions-field {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .journal-filters-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .filter-actions-field {
+    grid-column: span 1;
+  }
+  .action-buttons-wrap {
+    flex-direction: column;
+  }
+}

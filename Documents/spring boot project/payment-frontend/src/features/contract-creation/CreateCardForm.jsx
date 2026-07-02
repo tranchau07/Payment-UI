@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { getProductCards, createCard } from '../../services/cardApi';
 import { useSessionStorage } from '../../hooks/useSessionStorage';
@@ -195,7 +195,7 @@ const CreateCardForm = ({ contractIdentifier, onComplete }) => {
             </div>
             <div className="card-middle">
               <div className="card-info-item">
-                <span className="card-info-label">CARDHOLDER</span>
+                <span className="card-info-label">CHỦ THẺ</span>
                 <span className="card-info-value">
                   {`${formData.embossedLastName || ''} ${formData.embossedFirstName || ''}`.trim().toUpperCase() || 'TEN CHU THE'}
                 </span>
@@ -206,13 +206,13 @@ const CreateCardForm = ({ contractIdentifier, onComplete }) => {
                 )}
               </div>
               <div className="card-info-item">
-                <span className="card-info-label">EXPIRES</span>
+                <span className="card-info-label">HẾT HẠN</span>
                 <span className="card-info-value">{expiryString}</span>
               </div>
             </div>
             <div className="card-bottom">
-              <div className="card-product-tag">{formData.productCode || 'CARD_TRAINING'}</div>
-              <div className="card-balance-tag">ACTIVE</div>
+              <div className="card-product-tag">{formData.productCode || 'Chưa chọn sản phẩm'}</div>
+              <div className="card-balance-tag">ĐANG HOẠT ĐỘNG</div>
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@ const CreateCardForm = ({ contractIdentifier, onComplete }) => {
           </label>
           
           <label className="api-form-field">
-            <span>Tài khoản CBS (CBS Number)</span>
+            <span>Tài khoản liên kết</span>
             <input type="text" name="cbsNumber" value={formData.cbsNumber} onChange={handleChange} required placeholder="VD: 1234567890" />
           </label>
           

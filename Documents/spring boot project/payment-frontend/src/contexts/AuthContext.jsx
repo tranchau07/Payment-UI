@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import apiClient, { setSessionToken, registerLogoutCallback, registerTokenRefreshCallback } from '../apiClient';
 
 const AuthContext = createContext(null);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
               roles: rolesMapped,
             });
           }
-        } catch (err) {
+        } catch {
           console.warn('Session restoration failed, clearing token');
           sessionStorage.removeItem('identity_token');
           setAccessToken(null);
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const errMsg = err.response?.data?.error || err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
       setError(errMsg);
-      throw new Error(errMsg);
+      throw new Error(errMsg, { cause: err });
     }
   };
 
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const errMsg = err.response?.data?.error || err.response?.data?.message || 'Đăng ký tài khoản thất bại.';
       setError(errMsg);
-      throw new Error(errMsg);
+      throw new Error(errMsg, { cause: err });
     }
   };
 
@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }) => {
       return response.data;
     } catch (err) {
       const errMsg = err.response?.data?.message || 'Không thể lấy thông tin thiết lập TOTP';
-      throw new Error(errMsg);
+      throw new Error(errMsg, { cause: err });
     }
   };
 

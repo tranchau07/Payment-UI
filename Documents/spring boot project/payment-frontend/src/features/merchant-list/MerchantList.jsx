@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { clientService } from '../../services/clientApi';
+import { merchantService } from '../../services/merchantApi';
 import { branchService } from '../../services/branchApi';
 import { useApi } from '../../hooks/useApi';
 import ApiForm from '../../components/common/ApiForm';
-import ClientTable from './components/ClientTable';
+import MerchantTable from './components/MerchantTable';
 import Pagination from './components/Pagination';
 
 const INITIAL_SEARCH_VALUES = {
@@ -11,18 +11,21 @@ const INITIAL_SEARCH_VALUES = {
   phoneNumber: '',
   clientNumber: '',
   itn: '',
-  branchCode: ''
+  branchCode: '',
+  pcat: '',
+  conCat: '',
+  ccat: ''
 };
 
-export default function ClientList({ onCreateContract, onViewDetails, onAddClient }) {
+export default function MerchantList({ onCreateContract, onViewDetails, onAddMerchant }) {
   const [searchValues, setSearchValues] = useState(INITIAL_SEARCH_VALUES);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(20);
 
-  const searchApi = useApi(clientService.search);
+  const searchApi = useApi(merchantService.search);
   const branchesApi = useApi(branchService.getAll);
 
-  const fetchClients = useCallback(async (page = 0, filters = searchValues) => {
+  const fetchMerchants = useCallback(async (page = 0, filters = searchValues) => {
     const params = {
       ...filters,
       page,
@@ -39,33 +42,33 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
     try {
       await searchApi.execute(params);
     } catch (err) {
-      console.error('Fetch clients error:', err);
+      console.error('Fetch merchants error:', err);
     }
   }, [searchValues, pageSize, searchApi]);
 
   useEffect(() => {
     branchesApi.execute();
-    fetchClients(0, INITIAL_SEARCH_VALUES);
+    fetchMerchants(0, INITIAL_SEARCH_VALUES);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (values) => {
     setSearchValues(values);
     setCurrentPage(0);
-    fetchClients(0, values);
+    fetchMerchants(0, values);
   };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    fetchClients(newPage, searchValues);
+    fetchMerchants(newPage, searchValues);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const searchFields = [
-    { name: 'shortName', label: 'Tên khách hàng', placeholder: 'Nhập tên khách hàng' },
+    { name: 'shortName', label: 'Tên Merchant', placeholder: 'Nhập tên Merchant' },
     { name: 'phoneNumber', label: 'Số điện thoại', placeholder: 'Nhập số điện thoại' },
-    { name: 'clientNumber', label: 'Mã khách hàng', placeholder: 'Nhập mã khách hàng' },
-    { name: 'itn', label: 'Mã số thuế', placeholder: 'Nhập mã số thuế' },
+    { name: 'clientNumber', label: 'Mã Merchant', placeholder: 'Nhập mã Merchant' },
+    { name: 'itn', label: 'Mã số thuế / TIN', placeholder: 'Nhập mã số thuế' },
     { 
       name: 'branchCode', 
       label: 'Chi nhánh', 
@@ -75,7 +78,7 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
     }
   ];
 
-  const clientData = searchApi.data?.retCode === 0 ? (searchApi.data?.data || []) : [];
+  const merchantData = searchApi.data?.retCode === 0 ? (searchApi.data?.data || []) : [];
   const pagination = {
     totalElements: searchApi.data?.totalElements || 0,
     totalPages: searchApi.data?.totalPages || 0,
@@ -88,9 +91,9 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
   return (
     <section id="api-calls">
       <div className="page-header-container" style={{ marginBottom: '24px' }}>
-        <h2>Danh sách khách hàng</h2>
+        <h2>Danh sách Merchant</h2>
         <p className="section-description">
-          Tìm kiếm và quản lý thông tin khách hàng trong hệ thống.
+          Tìm kiếm và quản lý thông tin Merchant (Acquiring) trong hệ thống.
         </p>
       </div>
 
@@ -128,12 +131,12 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
 
       <div className="table-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', marginTop: '24px' }}>
         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-h)' }}>Kết quả tìm kiếm</h3>
-        <button className="submit-button small-btn" onClick={onAddClient}>Thêm mới</button>
+        <button className="submit-button small-btn" onClick={onAddMerchant}>Thêm mới</button>
       </div>
 
-      <ClientTable clients={clientData} onCreateContract={onCreateContract} onViewDetails={onViewDetails} />
+      <MerchantTable merchants={merchantData} onCreateContract={onCreateContract} onViewDetails={onViewDetails} />
 
-      {clientData.length > 0 && (
+      {merchantData.length > 0 && (
         <Pagination 
           {...pagination}
           onPageChange={handlePageChange}

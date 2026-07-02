@@ -25,8 +25,8 @@ export default function ClientRegistration({ onComplete }) {
   const [customData, setCustomData, clearCustomData] = useSessionStorage('cr_customData', [
     { addInfoType: 'AddInfo01', tagName: '', tagValue: '' }
   ]);
-  const [contractCreationResponse, setContractCreationResponse, clearContractCreationResponse] = useSessionStorage('cr_contractCreationResponse', null);
-  const [showContractForm, setShowContractForm, clearShowContractForm] = useSessionStorage('cr_showContractForm', false);
+  const [, setContractCreationResponse, clearContractCreationResponse] = useSessionStorage('cr_contractCreationResponse', null);
+  const [showContractForm,, clearShowContractForm] = useSessionStorage('cr_showContractForm', false);
 
   const allSalutations = useApi(salutationService.getAll);
   const allBranches = useApi(branchService.getAll);
