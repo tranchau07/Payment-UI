@@ -168,9 +168,6 @@ export default function TransactionJournal() {
     <section className="transaction-journal-section">
       <div className="page-header-container" style={{ marginBottom: '24px' }}>
         <h2>Nhật ký giao dịch</h2>
-        <p className="section-description">
-          Tra cứu giao dịch, trạng thái xử lý và biến động số dư.
-        </p>
       </div>
 
       {/* Dynamic Search & Filters Toolbar */}

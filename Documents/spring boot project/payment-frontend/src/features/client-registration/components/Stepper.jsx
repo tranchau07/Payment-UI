@@ -1,5 +1,8 @@
 
+import useI18n from '../../../hooks/useI18n';
+
 export default function Stepper({ steps, currentStep, onStepClick }) {
+  const { translate } = useI18n();
   return (
     <div className="stepper">
       {steps.map((step, index) => (
@@ -9,7 +12,7 @@ export default function Stepper({ steps, currentStep, onStepClick }) {
           onClick={() => index < currentStep && onStepClick(index)}
         >
           <div className="step-number">{index + 1}</div>
-          <div className="step-title">{step.title}</div>
+          <div className="step-title">{translate(step.title)}</div>
         </div>
       ))}
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSessionStorage } from '../../hooks/useSessionStorage';
 import ApiForm from '../../components/common/ApiForm';
 import ResultCard from '../../components/ResultCard';
+import useI18n from '../../hooks/useI18n';
 import Stepper from '../client-registration/components/Stepper';
 import { useApi } from '../../hooks/useApi';
 import { branchService } from '../../services/branchApi';
@@ -42,6 +43,7 @@ const INITIAL_FORM_VALUES = {
 };
 
 export default function MerchantRegistration({ onComplete }) {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [idempotencyKey,, clearIdempotencyKey] = useSessionStorage(
     `merchant_registration_idempotency:${user?.username || 'anonymous'}`,
@@ -296,10 +298,7 @@ export default function MerchantRegistration({ onComplete }) {
 
   return (
     <section id="api-calls">
-      <h2>Đăng ký Merchant mới</h2>
-      <p className="section-description">
-        Điền đầy đủ thông tin để tạo hồ sơ Merchant (Acquiring) mới trên hệ thống Core.
-      </p>
+      <h2>{t('registration.merchantTitle')}</h2>
 
       {!submittedValues && (
         <>
@@ -325,7 +324,7 @@ export default function MerchantRegistration({ onComplete }) {
                     onClick={handleBack}
                     disabled={registrationApi.loading}
                   >
-                    Quay lại
+                    {t('common.back')}
                   </button>
                 )}
                 <button 
@@ -333,7 +332,7 @@ export default function MerchantRegistration({ onComplete }) {
                   type="submit"
                   disabled={registrationApi.loading}
                 >
-                  {registrationApi.loading ? "Đang xử lý..." : (currentStep === steps.length - 1 ? "Hoàn tất & Đăng ký" : "Tiếp tục")}
+                  {registrationApi.loading ? t('common.processing') : (currentStep === steps.length - 1 ? t('common.finishRegister') : t('common.continue'))}
                 </button>
               </div>
               {localError && <div className="error-message">{localError}</div>}
@@ -345,7 +344,7 @@ export default function MerchantRegistration({ onComplete }) {
       {submittedValues && (
         <div className="registration-success-container">
           <ResultCard 
-            title="Đăng ký Merchant thành công" 
+            title={t('registration.merchantSuccess')}
             content={submittedValues} 
           />
           <div className="form-navigation" style={{ borderTop: 'none', justifyContent: 'center', gap: '15px' }}>
@@ -356,7 +355,7 @@ export default function MerchantRegistration({ onComplete }) {
                 onComplete();
               }}
             >
-              Quay lại danh sách
+              {t('common.backToList')}
             </button>
             <button 
               className="submit-button" 
@@ -366,7 +365,7 @@ export default function MerchantRegistration({ onComplete }) {
                 onComplete(clientNum);
               }}
             >
-              Tiếp tục tạo hợp đồng
+              {t('registration.continueContract')}
             </button>
           </div>
         </div>

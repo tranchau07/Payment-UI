@@ -131,9 +131,6 @@ export default function IssuingContractForm({ newClientId, contractCreationStatu
   return (
     <section id="issuing-contract-creation">
       <h2>Tạo hợp đồng phát hành với trách nhiệm</h2>
-      <p className="section-description">
-        Điền thông tin để tạo hợp đồng phát hành.
-      </p>
 
       <div className="form-container card">
         <ApiForm

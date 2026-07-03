@@ -1,20 +1,11 @@
-const formatGender = (gender) => {
-  if (gender === 'M') return 'Nam';
-  if (gender === 'F') return 'Nữ';
-  return 'Khác';
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
-};
+import useI18n from '../../../hooks/useI18n';
 
 export default function ClientTable({ clients, onCreateContract, onViewDetails }) {
+  const { t } = useI18n();
   if (!clients || clients.length === 0) {
     return (
       <div className="no-data">
-        Không tìm thấy khách hàng nào thỏa mãn điều kiện
+        {t('customer.notFound')}
       </div>
     );
   }
@@ -24,16 +15,9 @@ export default function ClientTable({ clients, onCreateContract, onViewDetails }
       <table className="client-table">
         <thead>
           <tr>
-            <th>Mã khách hàng</th>
-            <th>Họ và tên</th>
-            <th>Giới tính</th>
-            <th>Ngày sinh</th>
-            <th>Số điện thoại</th>
-            <th>Mã số thuế</th>
-            <th>CMT/CCCD</th>
-            <th>Email</th>
-            <th>Địa chỉ</th>
-            <th>Thao tác</th>
+            <th>{t('customer.number')}</th>
+            <th>{t('customer.fullName')}</th>
+            <th>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -41,28 +25,19 @@ export default function ClientTable({ clients, onCreateContract, onViewDetails }
             <tr key={client.id}>
               <td>{client.clientNumber}</td>
               <td>{client.shortName}</td>
-              <td>{formatGender(client.gender)}</td>
-              <td>{formatDate(client.birthDate)}</td>
-              <td>{client.mobilePhone}</td>
-              <td>{client.maskedItn}</td>
-              <td>{client.maskedSocialNumber}</td>
-              <td>{client.email}</td>
-              <td>{`${client.addressLine1 || ''}${client.city ? `, ${client.city}` : ''}`}</td>
               <td>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="table-action-group">
                   <button 
-                    className="submit-button" 
-                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                    className="table-action-button table-action-secondary"
                     onClick={() => onViewDetails && onViewDetails(client.id)}
                   >
-                    Xem chi tiết
+                    {t('common.detailsShort')}
                   </button>
                   <button 
-                    className="submit-button" 
-                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                    className="table-action-button table-action-primary"
                     onClick={() => onCreateContract && onCreateContract(client.clientNumber)}
                   >
-                    Tạo Hợp Đồng
+                    {t('common.openContractShort')}
                   </button>
                 </div>
               </td>

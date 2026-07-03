@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+import useI18n from '../hooks/useI18n';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const Icon = ({ name }) => {
   const paths = {
@@ -25,6 +27,7 @@ const Icon = ({ name }) => {
 
 export const LoginPage = () => {
   const { login, register } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState('login');
@@ -51,7 +54,7 @@ export const LoginPage = () => {
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
     if (!username.trim() || !password.trim()) {
-      setLocalError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
+      setLocalError(t('login.required'));
       return;
     }
 
@@ -62,7 +65,7 @@ export const LoginPage = () => {
       await login(username, password);
       navigate(from, { replace: true });
     } catch (error) {
-      setLocalError(error.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      setLocalError(error.message || t('login.failed'));
     } finally {
       setLoading(false);
     }
@@ -110,7 +113,7 @@ export const LoginPage = () => {
       <input
         id={id}
         type={showPassword ? 'text' : 'password'}
-        placeholder="Nhập mật khẩu"
+        placeholder={t('login.passwordPlaceholder')}
         value={value}
         onChange={onChange}
         disabled={loading}
@@ -121,7 +124,7 @@ export const LoginPage = () => {
         type="button"
         className="password-toggle"
         onClick={() => setShowPassword((visible) => !visible)}
-        aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+        aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
         disabled={loading}
       >
         <Icon name={showPassword ? 'eyeOff' : 'eye'} />
@@ -131,6 +134,7 @@ export const LoginPage = () => {
 
   return (
     <main className="login-page-container">
+      <div className="login-language"><LanguageSwitcher /></div>
       <section className={`login-card ${mode === 'register' ? 'login-card-register' : ''}`}>
         <div className="login-form-panel">
           <div className="login-simple-brand">
@@ -139,7 +143,7 @@ export const LoginPage = () => {
           </div>
 
           <header className="login-heading">
-            <h2>{mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}</h2>
+            <h2>{mode === 'login' ? t('login.title') : 'Tạo tài khoản'}</h2>
           </header>
 
           {localError && (
@@ -156,20 +160,20 @@ export const LoginPage = () => {
           {mode === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="login-form">
               <div className="form-group-sec">
-                <label htmlFor="username">Tên đăng nhập</label>
+                <label htmlFor="username">{t('login.username')}</label>
                 <div className="input-sec-wrapper">
                   <span className="input-icon"><Icon name="user" /></span>
-                  <input id="username" type="text" placeholder="Nhập tên đăng nhập" value={username} onChange={(event) => setUsername(event.target.value)} disabled={loading} autoComplete="username" autoFocus required />
+                  <input id="username" type="text" placeholder={t('login.usernamePlaceholder')} value={username} onChange={(event) => setUsername(event.target.value)} disabled={loading} autoComplete="username" autoFocus required />
                 </div>
               </div>
               <div className="form-group-sec">
-                <label htmlFor="password">Mật khẩu</label>
+                <label htmlFor="password">{t('login.password')}</label>
                 {passwordField('password', password, (event) => setPassword(event.target.value), 'current-password')}
               </div>
               <button type="submit" className="login-btn" disabled={loading}>
-                {loading ? <span className="btn-spinner" /> : <><span>Đăng nhập</span><Icon name="arrow" /></>}
+                {loading ? <span className="btn-spinner" /> : <><span>{t('login.submit')}</span><Icon name="arrow" /></>}
               </button>
-              <p className="login-switch">Chưa có tài khoản? <button type="button" onClick={() => switchMode('register')} disabled={loading}>Đăng ký</button></p>
+              <p className="login-switch">{t('login.accountProvisioned')}</p>
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="login-form login-register-form">
@@ -209,7 +213,7 @@ export const LoginPage = () => {
             </form>
           )}
 
-          <p className="login-compliance"><Icon name="lock" /> Bảo mật theo tiêu chuẩn PCI DSS</p>
+          <p className="login-compliance"><Icon name="lock" /> {t('login.compliance')}</p>
         </div>
       </section>
     </main>

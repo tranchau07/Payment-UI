@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { applProductService } from '../../services/applProductApi';
+import useI18n from '../../hooks/useI18n';
 import './ProductTree.css';
 
 // Helper to resolve product category text
 const getCategoryText = (conCat, pcat, code) => {
-  if (code === 'LIAB_TRAINING01') return 'BẢO LÃNH';
-  if (code === 'ISSUING_TRAINING01') return 'PHÁT HÀNH';
+  if (code === 'LIAB_TRAINING01') return 'LIABILITY';
+  if (code === 'ISSUING_TRAINING01') return 'ISSUING';
   
   if (conCat === 'C') return 'CARD';
   if (conCat === 'A' && pcat === 'C') return 'ISSUING';
@@ -59,13 +61,14 @@ function filterTree(nodes, searchTerm, categoryFilter, statusFilter) {
     .filter(node => node !== null);
 }
 
-function TreeNode({ node, level = 0 }) {
+function TreeNode({ node, level = 0, onOpen }) {
+  const { t } = useI18n();
   const hasChildren = node.children && node.children.length > 0;
   
   // Categorize product based on conCat/pcat
   const getProductCategoryBadge = (conCat, pcat, code) => {
-    if (code === 'LIAB_TRAINING01') return { text: 'BẢO LÃNH', className: 'badge-liab' };
-    if (code === 'ISSUING_TRAINING01') return { text: 'PHÁT HÀNH', className: 'badge-issuing' };
+    if (code === 'LIAB_TRAINING01') return { text: t('product.liability').toUpperCase(), className: 'badge-liab' };
+    if (code === 'ISSUING_TRAINING01') return { text: t('product.issuing').toUpperCase(), className: 'badge-issuing' };
     
     if (conCat === 'C') return { text: 'CARD', className: 'badge-card' };
     if (conCat === 'A' && pcat === 'C') return { text: 'ISSUING', className: 'badge-issuing' };
@@ -115,7 +118,9 @@ function TreeNode({ node, level = 0 }) {
 
   return (
     <div className="tree-node-wrapper" style={{ marginLeft: `${level * 16}px` }}>
-      <div className="tree-node-row">
+      <div className="tree-node-row" role="button" tabIndex={0}
+        onClick={(event) => { event.stopPropagation(); if (node.code) onOpen(node.code); }}
+        onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && node.code) { event.stopPropagation(); onOpen(node.code); } }}>
         {/* Status Dot */}
         <span 
           className={`status-dot ${node.isReady === 'Y' ? 'ready' : 'not-ready'}`}
@@ -137,30 +142,9 @@ function TreeNode({ node, level = 0 }) {
 
             {/* ncontracts badge */}
             <span className={`node-badge badge-count ${node.ncontracts > 0 ? 'has-contracts' : ''}`}>
-              Hợp đồng: {node.ncontracts || 0}
+              {t('product.contractCount')}: {node.ncontracts || 0}
             </span>
 
-            {/* Technical product parameters */}
-            {node.contrType !== null && (
-              <span className="meta-param" title={`contr_type ID: ${node.contrType}`}>
-                contr_type: <span className="param-val">{node.contrTypeDesc || node.contrType}</span>
-              </span>
-            )}
-            {node.contrSubtype !== null && (
-              <span className="meta-param" title={`contr_subtype ID: ${node.contrSubtype}`}>
-                contr_subtype: <span className="param-val">{node.contrSubtypeDesc || node.contrSubtype}</span>
-              </span>
-            )}
-            {node.accScheme !== null && (
-              <span className="meta-param" title={`acc_schema ID: ${node.accScheme}`}>
-                acc_schema: <span className="param-val">{node.accSchemeDesc || node.accScheme}</span>
-              </span>
-            )}
-            {node.servicePack !== null && (
-              <span className="meta-param" title={`service_pack ID: ${node.servicePack}`}>
-                service_pack: <span className="param-val">{node.servicePackDesc || node.servicePack}</span>
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -168,7 +152,7 @@ function TreeNode({ node, level = 0 }) {
       {hasChildren && (
         <div className="tree-node-children">
           {node.children.map((child) => (
-            <TreeNode key={child.id || child.code} node={child} level={level + 1} />
+            <TreeNode key={child.id || child.code} node={child} level={level + 1} onOpen={onOpen} />
           ))}
         </div>
       )}
@@ -177,6 +161,8 @@ function TreeNode({ node, level = 0 }) {
 }
 
 export default function ProductTree() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
   const treeApi = useApi(applProductService.getTree);
   
   // Search and filter states
@@ -199,7 +185,7 @@ export default function ProductTree() {
   return (
     <section className="product-tree-section">
       <div className="page-header-container" style={{ marginBottom: '24px' }}>
-        <h2>Danh Sách Sản Phẩm</h2>
+        <h2>{t('product.list')}</h2>
       </div>
 
       {/* Toolbar containing search bar and dropdown filters */}
@@ -217,7 +203,7 @@ export default function ProductTree() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Tìm mã hoặc tên sản phẩm..."
+                placeholder={t('product.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -229,12 +215,12 @@ export default function ProductTree() {
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <option value="ALL">Tất cả danh mục</option>
-              <option value="ISSUING">Phát hành</option>
-              <option value="ACQUIRING">Chấp nhận thanh toán</option>
+              <option value="ALL">{t('product.categoryAll')}</option>
+              <option value="ISSUING">{t('product.issuing')}</option>
+              <option value="ACQUIRING">{t('product.acquiring')}</option>
               <option value="CARD">CARD</option>
-              <option value="DEVICE">Thiết bị</option>
-              <option value="LIABILITY">Bảo lãnh</option>
+              <option value="DEVICE">{t('product.device')}</option>
+              <option value="LIABILITY">{t('product.liability')}</option>
             </select>
 
             {/* Filter by Status */}
@@ -243,9 +229,9 @@ export default function ProductTree() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="READY">Sẵn sàng</option>
-              <option value="NOT_READY">Chưa sẵn sàng</option>
+              <option value="ALL">{t('common.all')}</option>
+              <option value="READY">{t('product.ready')}</option>
+              <option value="NOT_READY">{t('product.notReady')}</option>
             </select>
           </div>
         </div>
@@ -254,7 +240,7 @@ export default function ProductTree() {
       {isLoading && (
         <div className="tree-loading-container">
           <div className="spinner" />
-          <span>Đang tải cây sản phẩm...</span>
+          <span>{t('product.loading')}</span>
         </div>
       )}
 
@@ -266,13 +252,13 @@ export default function ProductTree() {
 
       {!isLoading && !error && roots.length === 0 && (
         <div className="no-data-card">
-          Không tìm thấy sản phẩm đang hoạt động.
+          {t('product.noData')}
         </div>
       )}
 
       {!isLoading && !error && roots.length > 0 && filteredRoots.length === 0 && (
         <div className="no-data-card">
-          Không tìm thấy cấu hình sản phẩm nào khớp với bộ lọc hiện tại.
+          {t('product.noData')}
         </div>
       )}
 
@@ -281,29 +267,30 @@ export default function ProductTree() {
           {/* Restored Legend at the top of the card container (Responsive via CSS) */}
           <div className="tree-legend">
             <div className="legend-group">
-              <span className="legend-item" style={{ fontWeight: 'bold', color: 'var(--text-h)' }}>Trạng thái:</span>
+              <span className="legend-item" style={{ fontWeight: 'bold', color: 'var(--text-h)' }}>{t('common.status')}:</span>
               <span className="legend-sub-item">
                 <span className="status-dot ready" />
-                Sẵn sàng hoạt động
+                {t('product.ready')}
               </span>
               <span className="legend-sub-item">
                 <span className="status-dot not-ready" />
-                Chưa cấu hình xong
+                {t('product.notReady')}
               </span>
             </div>
             <div className="legend-group">
-              <span className="legend-item" style={{ fontWeight: 'bold', color: 'var(--text-h)' }}>Danh mục:</span>
-              <span className="node-badge badge-issuing">PHÁT HÀNH</span>
-              <span className="node-badge badge-acquiring">CHẤP NHẬN THANH TOÁN</span>
+              <span className="legend-item" style={{ fontWeight: 'bold', color: 'var(--text-h)' }}>{t('product.category')}:</span>
+              <span className="node-badge badge-issuing">{t('product.issuing').toUpperCase()}</span>
+              <span className="node-badge badge-acquiring">{t('product.acquiring').toUpperCase()}</span>
               <span className="node-badge badge-card">CARD</span>
-              <span className="node-badge badge-device">THIẾT BỊ</span>
-              <span className="node-badge badge-liab">BẢO LÃNH</span>
+              <span className="node-badge badge-device">{t('product.device').toUpperCase()}</span>
+              <span className="node-badge badge-liab">{t('product.liability').toUpperCase()}</span>
             </div>
           </div>
 
           <div className="tree-root-container">
             {filteredRoots.map((root) => (
-              <TreeNode key={root.id || root.code} node={root} level={0} />
+              <TreeNode key={root.id || root.code} node={root} level={0}
+                onOpen={(code) => navigate(`/products/${encodeURIComponent(code)}`)} />
             ))}
           </div>
         </div>

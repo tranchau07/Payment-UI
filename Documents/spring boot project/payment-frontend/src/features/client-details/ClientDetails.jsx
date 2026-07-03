@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { clientService } from '../../services/clientApi';
 import TransactionHistory from './TransactionHistory';
+import DetailTabs from '../../components/common/DetailTabs';
+import TechnicalDetailsPanel from '../../components/common/TechnicalDetailsPanel';
+import useAuth from '../../hooks/useAuth';
+import useI18n from '../../hooks/useI18n';
 
 const formatGender = (gender) => {
   if (gender === 'M') return 'Nam';
@@ -63,12 +68,16 @@ const MiniatureCard = ({ card }) => {
 };
 
 export default function ClientDetails({ clientId, isMerchant = false, onBack, onCreateDevice, onCreateContract }) {
+  const { hasRole } = useAuth();
+  const { t } = useI18n();
+  const canViewTechnical = hasRole('SUPERVISOR') || hasRole('ADMIN');
   const getHierarchyApi = useApi(clientService.getHierarchy);
   
   // State to track collapsed panels
   const [collapsedLiab, setCollapsedLiab] = useState({});
   const [collapsedIssuing, setCollapsedIssuing] = useState({});
   const [collapsedAcq, setCollapsedAcq] = useState({});
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (clientId) {
@@ -81,7 +90,7 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
   if (getHierarchyApi.loading) {
     return (
       <div className="loading-container" style={{ textAlign: 'center', padding: '50px' }}>
-        <div className="spinner">Đang tải thông tin hồ sơ và tài khoản khách hàng...</div>
+        <div className="spinner">{t('common.loading')}</div>
       </div>
     );
   }
@@ -89,12 +98,12 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
   if (getHierarchyApi.error) {
     return (
       <section id="api-calls">
-        <h2>Chi Tiết Khách Hàng</h2>
+        <h2>{t('customer.details')}</h2>
         <div className="error-message">
-          Không thể tải dữ liệu: {getHierarchyApi.error}
+          {t('customer.loadError')}
         </div>
         <div style={{ marginTop: '20px' }}>
-          <button className="back-button" onClick={onBack}>Quay lại danh sách</button>
+          <button className="back-button" onClick={onBack}>{t('customer.back')}</button>
         </div>
       </section>
     );
@@ -173,21 +182,20 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
   return (
     <section id="api-calls">
       <div className="page-header-container" style={{ marginBottom: '24px' }}>
-        <h2>{isMerchant ? 'Thông Tin Chi Tiết Merchant' : 'Thông Tin Chi Tiết Khách Hàng'}</h2>
-        <p className="section-description">
-          {isMerchant
-            ? 'Quản lý hồ sơ Merchant, hợp đồng Acquiring và các Device POS/Terminal trực thuộc.'
-            : 'Quản lý chi tiết hồ sơ cá nhân và danh sách hợp đồng, thẻ phát hành của khách hàng.'}
-        </p>
+        <h2>{isMerchant ? t('merchant.details') : t('customer.details')}</h2>
         <button className="back-button" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', margin: 0 }} onClick={onBack}>
-          Quay lại danh sách
+          {t('customer.back')}
         </button>
       </div>
 
-
+      <DetailTabs tabs={[
+        { id: 'overview', label: t('common.overview') }, { id: 'contracts', label: t('customer.contracts') },
+        { id: 'accounts', label: t('customer.accounts') }, { id: 'products', label: t('customer.products') },
+        { id: 'transactions', label: t('customer.transactions') }, ...(canViewTechnical ? [{ id: 'technical', label: t('common.technical') }] : [])
+      ]} active={activeTab} onChange={setActiveTab} />
 
       {/* Customer Profile Card */}
-      <div className="form-container card" style={{ padding: '24px', marginBottom: '32px' }}>
+      {activeTab === 'overview' && <div className="form-container card" style={{ padding: '24px', marginBottom: '32px' }}>
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: '80px 1fr', 
@@ -260,18 +268,13 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
             </span>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Owned Contracts & Cards Section */}
-      <div className="form-container card" style={{ padding: '32px' }}>
+      {activeTab === 'contracts' && <div className="form-container card" style={{ padding: '32px' }}>
         <h3 style={{ textAlign: 'left', marginTop: 0, marginBottom: '8px', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           {isMerchant ? '🏪 Hợp Đồng Acquiring & Device' : '💳 Danh Sách Hợp Đồng & Thẻ Sở Hữu'}
         </h3>
-        <p className="section-description" style={{ textAlign: 'left', margin: '0 0 24px 0' }}>
-          {isMerchant
-            ? 'Mỗi hợp đồng Acquiring có thể quản lý nhiều Device POS/Terminal. Chọn “+ Thêm Device” tại hợp đồng tương ứng.'
-            : 'Quản lý theo mô hình phân cấp: Hợp đồng bảo lãnh → Hợp đồng phát hành → Các thẻ liên kết.'}
-        </p>
 
         {!hasContracts ? (
           isMerchant ? (
@@ -462,7 +465,7 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
                     <div className="liability-header-left">
                       <span className="liability-badge">Bảo lãnh (Liability)</span>
                       <span className="liability-title">HĐ: {liab.contractNumber}</span>
-                      <span className="arrow-toggle className={isCollapsed ? '' : 'open'}">▼</span>
+                      <span className={`arrow-toggle ${isCollapsed ? '' : 'open'}`}>▼</span>
                     </div>
                     {liab.amountAvailable !== undefined && (
                       <div className="liability-amount" title="Khả dụng tối đa">
@@ -511,7 +514,7 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
                                     <span className="issuing-badge">Phát hành (Issuing)</span>
                                     <span className="issuing-title">HĐ: {issuing.contractNumber}</span>
                                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({issuing.productName})</span>
-                                    <span className="arrow-toggle className={isIssuingCollapsed ? '' : 'open'}">▼</span>
+                                    <span className={`arrow-toggle ${isIssuingCollapsed ? '' : 'open'}`}>▼</span>
                                   </div>
                                   {issuing.totalBalance !== undefined && (
                                     <div className="issuing-amount">
@@ -587,7 +590,7 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
                             <span className="issuing-badge">Phát hành (Issuing)</span>
                             <span className="issuing-title">HĐ: {issuing.contractNumber}</span>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>({issuing.productName})</span>
-                            <span className="arrow-toggle className={isIssuingCollapsed ? '' : 'open'}">▼</span>
+                            <span className={`arrow-toggle ${isIssuingCollapsed ? '' : 'open'}`}>▼</span>
                           </div>
                           {issuing.totalBalance !== undefined && (
                             <div className="issuing-amount">
@@ -678,9 +681,22 @@ export default function ClientDetails({ clientId, isMerchant = false, onBack, on
             )}
           </div>
         )}
-      </div>
+      </div>}
 
-      {hasContracts && <TransactionHistory contracts={contracts} />}
+      {activeTab === 'accounts' && <div className="form-container card" style={{ padding: '24px' }}>
+        <h3>{t('customer.accountsByContract')}</h3>
+        <div className="metadata-grid">{contracts.map((contract) => <Link key={contract.id} to={`/contracts/${contract.id}`} className="metadata-item">
+          <span className="metadata-label">{contract.contractName || contract.productType}</span><span className="metadata-value">HĐ {contract.contractNumber || contract.id}</span>
+        </Link>)}</div>
+      </div>}
+
+      {activeTab === 'products' && <div className="form-container card" style={{ padding: '24px' }}>
+        <h3>{t('customer.activeProducts')}</h3><div className="metadata-grid">{Array.from(new Map(contracts.filter((item) => item.productCode).map((item) => [item.productCode, item])).values()).map((item) =>
+          <Link key={item.productCode} to={`/products/${encodeURIComponent(item.productCode)}`} className="metadata-item"><span className="metadata-label">{item.productCode}</span><span className="metadata-value">{item.productName || t('customer.unnamedProduct')}</span></Link>)}</div>
+      </div>}
+
+      {activeTab === 'transactions' && (hasContracts ? <TransactionHistory contracts={contracts} /> : <div className="no-data">{t('customer.noContractsForTransactions')}</div>)}
+      {activeTab === 'technical' && <TechnicalDetailsPanel data={{ clientId: client.id, clientNumber: client.clientNumber, contractCount: contracts.length }} />}
     </section>
   );
 }

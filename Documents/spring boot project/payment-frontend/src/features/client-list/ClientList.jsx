@@ -5,6 +5,7 @@ import { useApi } from '../../hooks/useApi';
 import ApiForm from '../../components/common/ApiForm';
 import ClientTable from './components/ClientTable';
 import Pagination from './components/Pagination';
+import useI18n from '../../hooks/useI18n';
 
 const INITIAL_SEARCH_VALUES = {
   shortName: '',
@@ -15,6 +16,7 @@ const INITIAL_SEARCH_VALUES = {
 };
 
 export default function ClientList({ onCreateContract, onViewDetails, onAddClient }) {
+  const { t } = useI18n();
   const [searchValues, setSearchValues] = useState(INITIAL_SEARCH_VALUES);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(20);
@@ -62,15 +64,15 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
   };
 
   const searchFields = [
-    { name: 'shortName', label: 'Tên khách hàng', placeholder: 'Nhập tên khách hàng' },
-    { name: 'phoneNumber', label: 'Số điện thoại', placeholder: 'Nhập số điện thoại' },
-    { name: 'clientNumber', label: 'Mã khách hàng', placeholder: 'Nhập mã khách hàng' },
-    { name: 'itn', label: 'Mã số thuế', placeholder: 'Nhập mã số thuế' },
+    { name: 'shortName', label: t('customer.name'), placeholder: t('customer.namePlaceholder') },
+    { name: 'phoneNumber', label: t('customer.phone'), placeholder: t('customer.phonePlaceholder') },
+    { name: 'clientNumber', label: t('customer.number'), placeholder: t('customer.numberPlaceholder') },
+    { name: 'itn', label: t('customer.taxNumber'), placeholder: t('customer.taxPlaceholder') },
     { 
       name: 'branchCode', 
-      label: 'Chi nhánh', 
+      label: t('customer.branch'),
       type: 'select', 
-      placeholder: 'Chọn chi nhánh',
+      placeholder: t('customer.branchPlaceholder'),
       options: branchesApi.data?.map(b => ({ value: b.code, label: b.name })) || []
     }
   ];
@@ -88,10 +90,7 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
   return (
     <section id="api-calls">
       <div className="page-header-container" style={{ marginBottom: '24px' }}>
-        <h2>Danh sách khách hàng</h2>
-        <p className="section-description">
-          Tìm kiếm và quản lý thông tin khách hàng trong hệ thống.
-        </p>
+        <h2>{t('nav.customers')}</h2>
       </div>
 
       <div className="search-section search-card">
@@ -111,14 +110,14 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
               }}
               disabled={searchApi.loading}
             >
-              Xóa bộ lọc
+              {t('common.clear')}
             </button>
             <button 
               className="submit-button" 
               type="submit"
               disabled={searchApi.loading}
             >
-              {searchApi.loading ? "Đang tìm..." : "Tìm kiếm"}
+              {searchApi.loading ? t('common.searching') : t('common.search')}
             </button>
           </div>
         </ApiForm>
@@ -127,8 +126,8 @@ export default function ClientList({ onCreateContract, onViewDetails, onAddClien
       {errorMessage && <div className="error-message">{errorMessage}</div>}
 
       <div className="table-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', marginTop: '24px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-h)' }}>Kết quả tìm kiếm</h3>
-        <button className="submit-button small-btn" onClick={onAddClient}>Thêm mới</button>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-h)' }}>{t('common.searchResults')}</h3>
+        <button className="submit-button add-new-button" onClick={onAddClient}>{t('common.addNew')}</button>
       </div>
 
       <ClientTable clients={clientData} onCreateContract={onCreateContract} onViewDetails={onViewDetails} />

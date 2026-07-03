@@ -1,0 +1,294 @@
+/* Shared controls: inputs, buttons and pagination */
+:root {
+  --control-height: 44px;
+  --control-height-sm: 36px;
+  --control-radius: 9px;
+  --control-padding-x: 14px;
+  --control-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.16);
+  --control-disabled-bg: #f1f5f9;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  padding: 9px var(--control-padding-x);
+  background: var(--block);
+  color: var(--text-h);
+  font: 400 14px/1.4 var(--sans);
+  outline: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input, select, textarea)::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input:not([type='checkbox']):not([type='radio']), select, textarea):hover:not(:disabled):not([readonly]) {
+  border-color: #cbd5e1;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input:not([type='checkbox']):not([type='radio']), select, textarea):focus-visible {
+  border-color: var(--accent);
+  box-shadow: var(--control-focus-ring);
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input, select, textarea):disabled,
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input, select, textarea)[readonly] {
+  background: var(--control-disabled-bg);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+:where(.dashboard-content, .transaction-drawer, .login-form) :where(input, select, textarea)[aria-invalid='true'],
+.api-form-field:has(.field-error) :where(input, select, textarea) {
+  border-color: #dc2626;
+}
+
+.field-error {
+  margin: 2px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+:where(.submit-button, .back-button, .add-button, .primary-button, .btn-primary,
+  .btn-journal-submit, .btn-journal-reset, .filter-actions button, .data-state button) {
+  min-height: 40px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: var(--control-radius);
+  font: 600 14px/1 var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+:where(.submit-button, .primary-button, .btn-primary, .btn-journal-submit) {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.18);
+}
+
+:where(.back-button, .btn-journal-reset, .filter-actions button:not(.submit-button), .data-state button) {
+  border: 1px solid var(--border);
+  background: var(--block);
+  color: var(--text-h);
+  box-shadow: none;
+}
+
+:where(.submit-button, .primary-button, .btn-primary, .btn-journal-submit):hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+:where(.back-button, .btn-journal-reset, .filter-actions button:not(.submit-button), .data-state button):hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+:where(button, [role='button']):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:where(.submit-button, .back-button, .add-button, .primary-button, .btn-primary,
+  .btn-journal-submit, .btn-journal-reset, .filter-actions button, .data-state button):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.small-btn,
+.client-table .submit-button {
+  min-height: var(--control-height-sm);
+  padding: 0 12px !important;
+  font-size: 12px !important;
+}
+
+.add-new-button {
+  min-height: var(--control-height);
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .add-new-button { width: 100%; }
+}
+
+.transaction-summary-table button {
+  min-height: var(--control-height-sm);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--block);
+  color: var(--accent);
+  font: 600 12px/1 var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.transaction-summary-table button:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.table-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-action-button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font: 600 12px/1 var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.table-action-secondary {
+  border: 1px solid var(--border);
+  background: var(--block);
+  color: var(--text-h);
+}
+
+.table-action-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.table-action-primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.table-action-primary:hover {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+.pagination-container {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--block);
+}
+
+.pagination-info {
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.page-button {
+  min-width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--block);
+  color: var(--text-h);
+  font: 600 13px/1 var(--sans);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.page-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.page-button.active,
+.page-button[aria-current='page'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.page-button:disabled {
+  background: var(--control-disabled-bg);
+  color: #94a3b8;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.page-gap {
+  min-width: 24px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.drawer-pagination button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--block);
+  color: var(--text-h);
+  font: 600 13px/1 var(--sans);
+}
+
+@media (max-width: 640px) {
+  .form-navigation,
+  .filter-actions {
+    width: 100%;
+  }
+
+  .form-navigation > button,
+  .filter-actions > button {
+    flex: 1 1 0;
+  }
+
+  .pagination-container {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-info { text-align: center; }
+  .pagination-controls { justify-content: center; overflow-x: auto; }
+  .page-button-nav span { display: none; }
+}

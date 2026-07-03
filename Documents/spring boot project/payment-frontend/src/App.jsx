@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 
 // Context & Security
 import { AuthProvider } from './contexts/AuthContext';
+import { I18nProvider } from './contexts/I18nContext';
 import useAuth from './hooks/useAuth';
+import useI18n from './hooks/useI18n';
 import ProtectedRoute from './components/ProtectedRoute';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 // Pages & Components
 import LoginPage from './pages/LoginPage';
@@ -18,17 +21,68 @@ import MerchantRegistration from './features/merchant-registration/MerchantRegis
 import AcquiringContractFlow from './features/acquiring-contract/AcquiringContractFlow';
 import CreateDeviceForm from './features/acquiring-contract/CreateDeviceForm';
 import ProductTree from './features/product-tree/ProductTree';
-import TransactionJournal from './features/transaction-journal/TransactionJournal';
+import ProductDetail from './features/product-detail/ProductDetail';
+import ContractDetail from './features/contract-detail/ContractDetail';
+import AccountDetail from './features/account-detail/AccountDetail';
+import TransactionSearch from './features/transaction-search/TransactionSearch';
+import TransactionDetail from './features/transaction-detail/TransactionDetail';
 import ContractCashFlow from './features/contract-cash-flow/ContractCashFlow';
+import './styles/design-system.css';
 
 // Core Dashboard Component (Protected)
 const Dashboard = () => {
   const { user, logout } = useAuth();
-  const [view, setView] = useState('list'); // 'list', 'register', 'contract', 'merchant-list', 'merchant-register', 'details', 'create-device'
+  const { t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [legacyView, setLegacyView] = useState('list');
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [backView, setBackView] = useState('list');
   const [selectedContractNumber, setSelectedContractNumber] = useState('');
   const [selectedParentProductCode, setSelectedParentProductCode] = useState('');
+  const clientRouteMatch = location.pathname.match(/^\/clients\/(\d+)$/);
+  const merchantRouteMatch = location.pathname.match(/^\/merchants\/(\d+)$/);
+  const transactionRouteMatch = location.pathname.match(/^\/transactions\/(\d+)$/);
+  const productRouteMatch = location.pathname.match(/^\/products\/([^/]+)$/);
+  const contractRouteMatch = location.pathname.match(/^\/contracts\/(\d+)$/);
+  const accountRouteMatch = location.pathname.match(/^\/accounts\/(\d+)$/);
+  const routeView = transactionRouteMatch ? 'transaction-detail'
+    : location.pathname === '/transactions' ? 'docs'
+      : clientRouteMatch ? 'details'
+        : merchantRouteMatch ? 'details'
+        : location.pathname === '/clients/new' ? 'register'
+        : location.pathname === '/clients' ? 'list'
+          : location.pathname === '/merchants/new' ? 'merchant-register'
+          : location.pathname === '/merchants' ? 'merchant-list'
+          : contractRouteMatch ? 'contract-detail'
+            : accountRouteMatch ? 'account-detail'
+              : productRouteMatch ? 'product-detail'
+            : location.pathname === '/products' ? 'product-tree'
+            : location.pathname === '/cash-flow' ? 'cash-flow'
+            : null;
+  const view = routeView || legacyView;
+  const activeClientId = clientRouteMatch
+    ? Number(clientRouteMatch[1])
+    : merchantRouteMatch
+      ? Number(merchantRouteMatch[1])
+      : selectedClientId;
+  const effectiveBackView = merchantRouteMatch ? 'merchant-list' : backView;
+  const setView = (nextView) => {
+    const routes = {
+      list: '/clients',
+      register: '/clients/new',
+      'merchant-list': '/merchants',
+      'merchant-register': '/merchants/new',
+      docs: '/transactions',
+      'product-tree': '/products',
+      'cash-flow': '/cash-flow'
+    };
+    if (routes[nextView]) navigate(routes[nextView]);
+    else {
+      setLegacyView(nextView);
+      navigate('/');
+    }
+  };
   
   const handleCreateContract = (clientId) => {
     setSelectedClientId(clientId);
@@ -44,7 +98,7 @@ const Dashboard = () => {
   const handleViewDetails = (clientId, defaultBackView) => {
     setSelectedClientId(clientId);
     setBackView(defaultBackView);
-    setView('details');
+    navigate(defaultBackView === 'merchant-list' ? `/merchants/${clientId}` : `/clients/${clientId}`);
   };
 
   const handleCreateDevice = (contractNumber, parentProductCode) => {
@@ -57,86 +111,86 @@ const Dashboard = () => {
     <div className="dashboard-container">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <h3 className="system-name">CỔNG THANH TOÁN</h3>
-          <span className="security-status-pill">● KẾT NỐI AN TOÀN</span>
+          <h3 className="system-name">{t('app.name')}</h3>
+          <span className="security-status-pill"><span aria-hidden="true">●</span> {t('app.connectionSecure')}</span>
         </div>
 
         <nav className="sidebar-nav">
           <div className="sidebar-group">
-            <div className="sidebar-group-title">PHÁT HÀNH</div>
+            <div className="sidebar-group-title">{t('nav.issuing')}</div>
             <button
-              className={`sidebar-link ${view === 'list' || (view === 'details' && backView === 'list') ? 'active' : ''}`}
+              className={`sidebar-link ${view === 'list' || (view === 'details' && effectiveBackView === 'list') ? 'active' : ''}`}
               onClick={() => setView('list')}
             >
-              Danh sách khách hàng
+              {t('nav.customers')}
             </button>
             <button
               className={`sidebar-link ${view === 'register' ? 'active' : ''}`}
               onClick={() => setView('register')}
             >
-              Đăng ký mới
+              {t('nav.newCustomer')}
             </button>
           </div>
 
           <div className="sidebar-group">
-            <div className="sidebar-group-title">CHẤP NHẬN THANH TOÁN</div>
+            <div className="sidebar-group-title">{t('nav.acquiring')}</div>
             <button
-              className={`sidebar-link ${view === 'merchant-list' || (view === 'details' && backView === 'merchant-list') ? 'active' : ''}`}
+              className={`sidebar-link ${view === 'merchant-list' || (view === 'details' && effectiveBackView === 'merchant-list') ? 'active' : ''}`}
               onClick={() => setView('merchant-list')}
             >
-              Danh sách Merchant
+              {t('nav.merchants')}
             </button>
             <button
               className={`sidebar-link ${view === 'merchant-register' ? 'active' : ''}`}
               onClick={() => setView('merchant-register')}
             >
-              Đăng ký Merchant
+              {t('nav.newMerchant')}
             </button>
           </div>
 
           <div className="sidebar-group">
-            <div className="sidebar-group-title">DANH MỤC</div>
+            <div className="sidebar-group-title">{t('nav.catalog')}</div>
             <button
-              className={`sidebar-link ${view === 'product-tree' ? 'active' : ''}`}
+              className={`sidebar-link ${view === 'product-tree' || view === 'product-detail' ? 'active' : ''}`}
               onClick={() => setView('product-tree')}
             >
-              Cây sản phẩm
+              {t('nav.products')}
             </button>
             <button
-              className={`sidebar-link ${view === 'docs' ? 'active' : ''}`}
+              className={`sidebar-link ${view === 'docs' || view === 'transaction-detail' ? 'active' : ''}`}
               onClick={() => setView('docs')}
             >
-              Nhật ký giao dịch
+              {t('nav.transactions')}
             </button>
             <button
               className={`sidebar-link ${view === 'cash-flow' ? 'active' : ''}`}
               onClick={() => setView('cash-flow')}
             >
-              Dòng tiền hợp đồng
+              {t('nav.cashFlow')}
             </button>
           </div>
 
           {(view === 'contract' || view === 'acquiring-contract' || view === 'details' || view === 'create-device') && (
             <div className="sidebar-group">
-              <div className="sidebar-group-title">THAO TÁC</div>
+              <div className="sidebar-group-title">{t('nav.actions')}</div>
               {view === 'contract' && (
                 <button className="sidebar-link active">
-                  Mở Hợp đồng
+                  {t('nav.openContract')}
                 </button>
               )}
               {view === 'acquiring-contract' && (
                 <button className="sidebar-link active">
-                  Mở hợp đồng Acquiring
+                  {t('nav.openAcquiringContract')}
                 </button>
               )}
               {view === 'create-device' && (
                 <button className="sidebar-link active">
-                  Khai báo Device
+                  {t('nav.registerDevice')}
                 </button>
               )}
               {view === 'details' && (
                 <button className="sidebar-link active">
-                  Chi tiết khách hàng
+                  {t('nav.customerDetail')}
                 </button>
               )}
             </div>
@@ -144,6 +198,7 @@ const Dashboard = () => {
         </nav>
 
         <div className="sidebar-footer">
+          <LanguageSwitcher compact />
           <div className="user-avatar-circle">
             {user?.username?.substring(0, 2).toUpperCase()}
           </div>
@@ -157,7 +212,7 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-          <button className="btn-logout-icon" onClick={logout} title="Đăng xuất khỏi hệ thống">
+          <button className="btn-logout-icon" onClick={logout} title={t('app.logout')} aria-label={t('app.logout')}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -222,9 +277,9 @@ const Dashboard = () => {
           )}
           {view === 'details' && (
             <ClientDetails 
-              clientId={selectedClientId} 
-              isMerchant={backView === 'merchant-list'}
-              onBack={() => setView(backView)} 
+              clientId={activeClientId} 
+              isMerchant={effectiveBackView === 'merchant-list'}
+              onBack={() => setView(effectiveBackView)} 
               onCreateDevice={handleCreateDevice}
               onCreateContract={handleCreateAcquiringContract}
             />
@@ -240,8 +295,20 @@ const Dashboard = () => {
           {view === 'product-tree' && (
             <ProductTree />
           )}
+          {view === 'product-detail' && (
+            <ProductDetail />
+          )}
+          {view === 'contract-detail' && (
+            <ContractDetail />
+          )}
+          {view === 'account-detail' && (
+            <AccountDetail />
+          )}
           {view === 'docs' && (
-            <TransactionJournal />
+            <TransactionSearch />
+          )}
+          {view === 'transaction-detail' && (
+            <TransactionDetail />
           )}
           {view === 'cash-flow' && (
             <ContractCashFlow />
@@ -255,15 +322,16 @@ const Dashboard = () => {
 // Main App Component with Router
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <I18nProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <Routes>
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected Main App Route */}
           <Route
-            path="/"
+            path="/*"
             element={
               <ProtectedRoute allowedRoles={['TELLER', 'SUPERVISOR', 'ADMIN']}>
                 <Dashboard />
@@ -274,8 +342,9 @@ function App() {
           {/* Catch-all Redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </I18nProvider>
   );
 }
 

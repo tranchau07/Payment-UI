@@ -42,22 +42,23 @@ export function getDocFieldLabel(label) {
 }
 
 const POSTING_STATUS_META = Object.freeze({
-  P: { label: 'Đã hạch toán', className: 'posted' },
-  W: { label: 'Chờ xử lý', className: 'waiting' },
-  J: { label: 'Bị từ chối', className: 'error' },
-  D: { label: 'Từ chối', className: 'error' },
-  C: { label: 'Đã đóng', className: 'neutral' },
-  I: { label: 'Không hoạt động', className: 'unknown' },
-  U: { label: 'Xử lý hệ thống', className: 'system' },
+  P: { vi: 'Đã hạch toán', en: 'Posted', className: 'posted' },
+  W: { vi: 'Chờ xử lý', en: 'Pending', className: 'waiting' },
+  J: { vi: 'Bị từ chối', en: 'Rejected', className: 'error' },
+  D: { vi: 'Từ chối', en: 'Declined', className: 'error' },
+  C: { vi: 'Đã đóng', en: 'Closed', className: 'neutral' },
+  I: { vi: 'Không hoạt động', en: 'Inactive', className: 'unknown' },
+  U: { vi: 'Xử lý hệ thống', en: 'System processing', className: 'system' },
 });
 
-export function getPostingStatusMeta(status) {
+export function getPostingStatusMeta(status, language = 'vi') {
+  const noStatus = language === 'en' ? 'No status' : 'Chưa có trạng thái';
   if (!status) {
     return {
       code: null,
-      label: 'Chưa có trạng thái',
-      displayLabel: 'Chưa có trạng thái',
-      optionLabel: 'Chưa có trạng thái',
+      label: noStatus,
+      displayLabel: noStatus,
+      optionLabel: noStatus,
       className: 'unknown',
     };
   }
@@ -75,11 +76,12 @@ export function getPostingStatusMeta(status) {
     };
   }
 
+  const label = meta[language] || meta.vi;
   return {
     code,
-    label: meta.label,
-    displayLabel: `${meta.label} (${code})`,
-    optionLabel: `${meta.label} (${code})`,
+    label,
+    displayLabel: `${label} (${code})`,
+    optionLabel: `${label} (${code})`,
     className: meta.className,
   };
 }

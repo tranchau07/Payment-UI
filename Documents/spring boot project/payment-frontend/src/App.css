@@ -2943,3 +2943,37 @@ main {
     transform: none;
   }
 }
+.language-switcher {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--block);
+}
+
+.language-switcher button {
+  min-width: 34px;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.language-switcher button.active {
+  background: var(--accent, #2563eb);
+  color: #fff;
+}
+
+.language-switcher.compact { flex-shrink: 0; }
+
+.login-language {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 10;
+}

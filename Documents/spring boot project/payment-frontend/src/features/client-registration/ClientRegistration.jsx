@@ -13,11 +13,13 @@ import { countryService } from '../../services/countryApi';
 import { clientService } from '../../services/clientApi';
 import { INITIAL_FORM_VALUES } from '../../constants/initialValues';
 import { getRegistrationSteps } from './utils/formSteps';
+import useI18n from '../../hooks/useI18n';
 import { formatRegistrationData } from './utils/dataFormatter';
 import { addressTypeService } from '../../services/addressTypeApi';
 
 
 export default function ClientRegistration({ onComplete }) {
+  const { t } = useI18n();
   const [submittedValues, setSubmittedValues, clearSubmittedValues] = useSessionStorage('cr_submittedValues', null);
   const [localError, setLocalError] = useState('');
   const [currentStep, setCurrentStep, clearCurrentStep] = useSessionStorage('cr_currentStep', 0);
@@ -139,10 +141,7 @@ export default function ClientRegistration({ onComplete }) {
 
   return (
     <section id="api-calls">
-      <h2>Đăng kí khách hàng</h2>
-      <p className="section-description">
-        Điền đầy đủ thông tin để đăng ký khách hàng mới.
-      </p>
+      <h2>{t('registration.customerTitle')}</h2>
 
       {!submittedValues && !showContractForm && (
         <>
@@ -177,7 +176,7 @@ export default function ClientRegistration({ onComplete }) {
                     onClick={handleBack}
                     disabled={registrationApi.loading}
                   >
-                    Quay lại
+                    {t('common.back')}
                   </button>
                 )}
                 <button 
@@ -185,7 +184,7 @@ export default function ClientRegistration({ onComplete }) {
                   type="submit"
                   disabled={registrationApi.loading}
                 >
-                  {registrationApi.loading ? "Đang xử lý..." : (currentStep === steps.length - 1 ? "Hoàn tất & Đăng ký" : "Tiếp tục")}
+                  {registrationApi.loading ? t('common.processing') : (currentStep === steps.length - 1 ? t('common.finishRegister') : t('common.continue'))}
                 </button>
               </div>
               {localError && <div className="error-message">{localError}</div>}
@@ -197,7 +196,7 @@ export default function ClientRegistration({ onComplete }) {
       {submittedValues && !showContractForm && (
         <div className="registration-success-container">
           <ResultCard 
-            title="Đăng ký khách hàng thành công" 
+            title={t('registration.customerSuccess')}
             content={submittedValues} 
           />
           <div className="form-navigation" style={{ borderTop: 'none', justifyContent: 'center', gap: '15px' }}>
@@ -208,7 +207,7 @@ export default function ClientRegistration({ onComplete }) {
                 onComplete();
               }}
             >
-              Quay lại danh sách
+              {t('common.backToList')}
             </button>
             <button 
               className="submit-button" 
@@ -218,7 +217,7 @@ export default function ClientRegistration({ onComplete }) {
                 onComplete(clientNum);
               }}
             >
-              Tiếp tục tạo hợp đồng
+              {t('registration.continueContract')}
             </button>
           </div>
         </div>

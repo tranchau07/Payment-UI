@@ -1,8 +1,11 @@
+import useI18n from '../../../hooks/useI18n';
+
 export default function MerchantTable({ merchants, onCreateContract, onViewDetails }) {
+  const { t } = useI18n();
   if (!merchants || merchants.length === 0) {
     return (
       <div className="no-data">
-        Không tìm thấy Merchant nào thỏa mãn điều kiện
+        {t('merchant.notFound')}
       </div>
     );
   }
@@ -12,13 +15,9 @@ export default function MerchantTable({ merchants, onCreateContract, onViewDetai
       <table className="client-table">
         <thead>
           <tr>
-            <th>Mã Merchant</th>
-            <th>Tên Merchant</th>
-            <th>Số điện thoại</th>
-            <th>Mã số thuế (TIN)</th>
-            <th>Email</th>
-            <th>Địa chỉ</th>
-            <th>Thao tác</th>
+            <th>{t('merchant.number')}</th>
+            <th>{t('merchant.name')}</th>
+            <th>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -26,25 +25,19 @@ export default function MerchantTable({ merchants, onCreateContract, onViewDetai
             <tr key={merchant.id}>
               <td>{merchant.clientNumber}</td>
               <td>{merchant.shortName}</td>
-              <td>{merchant.mobilePhone || merchant.phone}</td>
-              <td>{merchant.maskedItn}</td>
-              <td>{merchant.email}</td>
-              <td>{`${merchant.addressLine1 || ''}${merchant.city ? `, ${merchant.city}` : ''}`}</td>
               <td>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="table-action-group">
                   <button 
-                    className="submit-button" 
-                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                    className="table-action-button table-action-secondary"
                     onClick={() => onViewDetails && onViewDetails(merchant.id)}
                   >
-                    Xem chi tiết
+                    {t('common.detailsShort')}
                   </button>
                   <button 
-                    className="submit-button" 
-                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                    className="table-action-button table-action-primary"
                     onClick={() => onCreateContract && onCreateContract(merchant.id)}
                   >
-                    Tạo Hợp Đồng
+                    {t('common.openContractShort')}
                   </button>
                 </div>
               </td>

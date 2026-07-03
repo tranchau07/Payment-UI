@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import useI18n from '../../hooks/useI18n';
 
 export default function ApiForm({ fields, initialValues, onSubmit, onFieldChange, values: controlledValues, onChange, children }) {
+  const { language, translate } = useI18n();
   const [internalValues, setInternalValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
 
@@ -13,22 +15,22 @@ export default function ApiForm({ fields, initialValues, onSubmit, onFieldChange
     }
 
     if (field.validation.required && !value) {
-      return field.validation.message || 'Trường này là bắt buộc';
+      return translate(field.validation.message || 'Trường này là bắt buộc');
     }
 
     if (field.validation.pattern && value) {
       const isValid = field.validation.pattern.test(value);
       if (!isValid) {
-        return field.validation.message || 'Giá trị không hợp lệ';
+        return translate(field.validation.message || 'Giá trị không hợp lệ');
       }
     }
 
     if (field.validation.maxLength && value.length > field.validation.maxLength) {
-      return field.validation.message || `Tối đa ${field.validation.maxLength} ký tự`;
+      return field.validation.message ? translate(field.validation.message) : (language === 'en' ? `Maximum ${field.validation.maxLength} characters` : `Tối đa ${field.validation.maxLength} ký tự`);
     }
 
     if (field.validation.minLength && value.length < field.validation.minLength) {
-      return field.validation.message || `Tối thiểu ${field.validation.minLength} ký tự`;
+      return field.validation.message ? translate(field.validation.message) : (language === 'en' ? `Minimum ${field.validation.minLength} characters` : `Tối thiểu ${field.validation.minLength} ký tự`);
     }
 
     return '';
@@ -70,6 +72,7 @@ export default function ApiForm({ fields, initialValues, onSubmit, onFieldChange
   return (
     <form className="api-form" onSubmit={handleSubmit}>
       {fields.map((field) => {
+        const errorId = `${field.name}-error`;
         // Skip rendering hidden fields visually
         if (field.type === 'hidden') {
           return (
@@ -84,19 +87,21 @@ export default function ApiForm({ fields, initialValues, onSubmit, onFieldChange
 
         return (
           <label key={field.name} className="api-form-field">
-            <span>{field.label}</span>
+            <span>{translate(field.label)}</span>
             {field.type === 'select' ? (
               <select
                 name={field.name}
                 value={values[field.name] ?? ''}
                 onChange={handleChange}
+                aria-invalid={Boolean(errors[field.name])}
+                aria-describedby={errors[field.name] ? errorId : undefined}
               >
                 <option value="" disabled>
-                  {field.placeholder}
+                  {translate(field.placeholder)}
                 </option>
                 {field.options?.map((option, index) => (
                   <option key={`${option.value}-${index}`} value={option.value}>
-                    {option.label}
+                    {translate(option.label)}
                   </option>
                 ))}
               </select>
@@ -105,13 +110,15 @@ export default function ApiForm({ fields, initialValues, onSubmit, onFieldChange
                 name={field.name}
                 type={field.inputType || 'text'}
                 value={values[field.name] ?? ''}
-                placeholder={field.placeholder}
+                placeholder={translate(field.placeholder)}
                 onChange={handleChange}
                 readOnly={field.readOnly}
                 disabled={field.disabled}
+                aria-invalid={Boolean(errors[field.name])}
+                aria-describedby={errors[field.name] ? errorId : undefined}
               />
             )}
-            {errors[field.name] && <p className="field-error">{errors[field.name]}</p>}
+            {errors[field.name] && <p className="field-error" id={errorId} role="alert">{errors[field.name]}</p>}
           </label>
         );
       })}
