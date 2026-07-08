@@ -7,13 +7,12 @@ import MaskedIdentifier from '../../components/common/MaskedIdentifier';
 import MoneyAmount from '../../components/common/MoneyAmount';
 import StatusBadge from '../../components/common/StatusBadge';
 import TechnicalDetailsPanel from '../../components/common/TechnicalDetailsPanel';
-import WarningBanner from '../../components/common/WarningBanner';
 import useAuth from '../../hooks/useAuth';
 import useI18n from '../../hooks/useI18n';
 import './TransactionDetail.css';
 
-const dateTime = (value, locale) => value ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value)) : '—';
-const Field = ({ label, children }) => <div className="business-field"><span>{label}</span><strong>{children ?? '—'}</strong></div>;
+const dateTime = (value, locale) => value ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value)) : '-';
+const Field = ({ label, children }) => <div className="business-field"><span>{label}</span><strong>{children ?? '-'}</strong></div>;
 
 export default function TransactionDetail() {
   const { hasRole } = useAuth();
@@ -37,11 +36,11 @@ export default function TransactionDetail() {
     return () => { active = false; };
   }, [docId, t]);
 
-  return <section className="transaction-detail-page"><Link to="/transactions" className="back-link">← {t('transaction.list')}</Link>
+  return <section className="transaction-detail-page"><Link to="/transactions" className="back-link">{t('transaction.list')}</Link>
     <DataState loading={loading} error={error} onRetry={load} empty={!data}>
       {data && <><header className="transaction-detail-header card"><div><span>{t('transaction.type')} #{data.id}</span><h2>{data.transactionTypeName || t('common.unclassified')}</h2>{data.details && <p>{data.details}</p>}</div>
         <div><MoneyAmount value={data.amount} currency={data.currency} /><StatusBadge code={data.postingStatus} /></div></header>
-        <WarningBanner warnings={data.warnings} /><DetailTabs tabs={tabs} active={tab} onChange={setTab} />
+        <DetailTabs tabs={tabs} active={tab} onChange={setTab} />
         <div className="detail-tab-panel card">
           {tab === 'overview' && <div className="business-grid"><Field label={t('transaction.time')}>{dateTime(data.transactionDate, locale)}</Field><Field label={t('transaction.postingDate')}>{dateTime(data.postingDate, locale)}</Field>
             <Field label={t('transaction.receivedDate')}>{dateTime(data.receivedDate, locale)}</Field><Field label={t('transaction.returnCode')}>{data.returnCode}</Field><Field label={t('transaction.authorization')}><MaskedIdentifier value={data.maskedAuthorizationCode} /></Field><Field label={t('transaction.outwardStatus')}>{data.outwardStatus}</Field></div>}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { docService } from '../../services/docApi';
 import { getPostingStatusMeta } from '../transaction-journal/docPresentation';
 import useI18n from '../../hooks/useI18n';
@@ -10,7 +11,7 @@ const money = (value, currency, locale) => new Intl.NumberFormat(locale, {
 
 const dateTime = (value, locale) => value
   ? new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value))
-  : '—';
+  : '-';
 
 const SORTERS = {
   latest: (a, b) => new Date(b.lastTransactionDate || 0) - new Date(a.lastTransactionDate || 0),
@@ -22,6 +23,7 @@ const SORTERS = {
 
 export default function ContractCashFlow() {
   const { t, locale, language } = useI18n();
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -70,6 +72,11 @@ export default function ContractCashFlow() {
     setHistoryLoading(true);
     setHistoryError('');
     setHistoryPage(page);
+  };
+
+  const openTransactionDetail = (docId) => {
+    if (!docId) return;
+    navigate(`/transactions/${docId}`);
   };
 
   const getDirection = (doc) => {
@@ -124,7 +131,7 @@ export default function ContractCashFlow() {
       </div>
 
       <div className="currency-summary">
-        {currencyTotals.map((item) => <article key={item.code}><strong>{item.code}</strong><span className="cash-in">↓ {t('cashFlow.received')} {money(item.received, item.code, locale)}</span><span className="cash-out">↑ {t('cashFlow.sent')} {money(item.sent, item.code, locale)}</span></article>)}
+        {currencyTotals.map((item) => <article key={item.code}><strong>{item.code}</strong><span className="cash-in">{t('cashFlow.received')} {money(item.received, item.code, locale)}</span><span className="cash-out">{t('cashFlow.sent')} {money(item.sent, item.code, locale)}</span></article>)}
       </div>
 
       <div className="cash-flow-toolbar">
@@ -140,9 +147,9 @@ export default function ContractCashFlow() {
           return <article className="contract-flow-card" key={`${row.contractId}-${flowCurrency}`} role="button" tabIndex="0" onClick={() => openHistory(row)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openHistory(row); }}>
             <header><div><h2>{row.contractName || t('contract.unnamed')}</h2><p>{row.contractNumber || `ID ${row.contractId}`}</p></div><span className="currency-chip">{flowCurrency}</span></header>
             <div className="available-balance"><span>{t('cashFlow.availableBalance')}</span><strong>{money(row.amountAvailable, row.balanceCurrency || flowCurrency, locale)}</strong></div>
-            <div className="flow-pair"><div className="received"><span>↓ {t('cashFlow.received')}</span><strong>{money(row.totalReceived, flowCurrency, locale)}</strong></div><div className="sent"><span>↑ {t('cashFlow.sent')}</span><strong>{money(row.totalSent, flowCurrency, locale)}</strong></div></div>
+            <div className="flow-pair"><div className="received"><span>{t('cashFlow.received')}</span><strong>{money(row.totalReceived, flowCurrency, locale)}</strong></div><div className="sent"><span>{t('cashFlow.sent')}</span><strong>{money(row.totalSent, flowCurrency, locale)}</strong></div></div>
             <div className={`net-flow ${positive ? 'positive' : 'negative'}`}><span>{t('cashFlow.net')}</span><strong>{positive ? '+' : ''}{money(row.netCashFlow, flowCurrency, locale)}</strong></div>
-            <footer><span>{Number(row.transactionCount || 0).toLocaleString(locale)} {t('transaction.count')}</span><span>{t('cashFlow.latest')} {dateTime(row.lastTransactionDate, locale)}</span><span className="view-transactions">{t('cashFlow.viewTransactions')} →</span>{row.product && <span className="product-label">{row.product}</span>}</footer>
+            <footer><span>{Number(row.transactionCount || 0).toLocaleString(locale)} {t('transaction.count')}</span><span>{t('cashFlow.latest')} {dateTime(row.lastTransactionDate, locale)}</span><span className="view-transactions">{t('cashFlow.viewTransactions')}</span>{row.product && <span className="product-label">{row.product}</span>}</footer>
           </article>;
         })}
       </div>
@@ -152,7 +159,7 @@ export default function ContractCashFlow() {
         <aside className="transaction-drawer" role="dialog" aria-modal="true" aria-label={t('cashFlow.history')}>
           <header className="drawer-header">
             <div><span>{t('cashFlow.history')}</span><h2>{selectedContract.contractName || t('contract.unnamed')}</h2><p>{selectedContract.contractNumber || `ID ${selectedContract.contractId}`}</p></div>
-            <button type="button" onClick={closeHistory} aria-label={t('cashFlow.close')}>×</button>
+            <button type="button" onClick={closeHistory} aria-label={t('cashFlow.close')}>x</button>
           </header>
 
           <div className="drawer-summary"><span>{t('cashFlow.availableBalance')}</span><strong>{money(selectedContract.amountAvailable, selectedContract.balanceCurrency || selectedContract.currency, locale)}</strong></div>
@@ -164,9 +171,9 @@ export default function ContractCashFlow() {
               const direction = getDirection(doc);
               const status = getPostingStatusMeta(doc.postingStatus, language);
               const currency = doc.transCurrName || doc.transCurr || selectedContract.currency;
-              return <article className="transaction-item" key={doc.id}>
-                <div className={`direction-icon ${direction.className}`}>{direction.className === 'incoming' ? '↓' : direction.className === 'outgoing' ? '↑' : '↔'}</div>
-                <div className="transaction-main"><strong>{doc.transTypeName || doc.transDetails || t('common.unclassified')}</strong><span>{dateTime(doc.transDate, locale)} · #{doc.id}</span><small>{doc.transDetails || t('cashFlow.noNarrative')}</small></div>
+              return <article className="transaction-item" key={doc.id} role="button" tabIndex="0" onClick={() => openTransactionDetail(doc.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openTransactionDetail(doc.id); }}>
+                <div className={`direction-icon ${direction.className}`}>{direction.className === 'incoming' ? '+' : direction.className === 'outgoing' ? '-' : '='}</div>
+                <div className="transaction-main"><strong>{doc.transTypeName || doc.transDetails || t('common.unclassified')}</strong><span>{dateTime(doc.transDate, locale)} - #{doc.id}</span><small>{doc.transDetails || t('cashFlow.noNarrative')}</small></div>
                 <div className="transaction-value"><strong className={direction.className}>{money(Math.abs(Number(doc.transAmount || 0)), currency, locale)}</strong><span>{direction.label}</span><small className={`transaction-status ${status.className}`}>{status.label}</small></div>
               </article>;
             })}
@@ -174,9 +181,9 @@ export default function ContractCashFlow() {
           </div>
 
           {history && history.totalPages > 1 && <footer className="drawer-pagination">
-            <button type="button" disabled={historyPage === 0 || historyLoading} onClick={() => changeHistoryPage(historyPage - 1)}>← {t('common.previous')}</button>
+            <button type="button" disabled={historyPage === 0 || historyLoading} onClick={() => changeHistoryPage(historyPage - 1)}>{t('common.previous')}</button>
             <span>{t('cashFlow.page')} {historyPage + 1} / {history.totalPages}</span>
-            <button type="button" disabled={historyPage + 1 >= history.totalPages || historyLoading} onClick={() => changeHistoryPage(historyPage + 1)}>{t('common.next')} →</button>
+            <button type="button" disabled={historyPage + 1 >= history.totalPages || historyLoading} onClick={() => changeHistoryPage(historyPage + 1)}>{t('common.next')}</button>
           </footer>}
         </aside>
       </div>}

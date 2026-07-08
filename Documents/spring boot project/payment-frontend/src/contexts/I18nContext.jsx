@@ -3,7 +3,22 @@ import { I18nContext } from './i18n-context';
 
 const STORAGE_KEY = 'payment-ui-language';
 
+const repairMojibake = (value) => {
+  if (typeof value !== 'string') return value;
+  if (!/[\u00c2-\u00c4\u00e2]/.test(value)) return value;
+  try {
+    return decodeURIComponent(
+      Array.from(value)
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+        .join('')
+    );
+  } catch {
+    return value;
+  }
+};
+
 const legacyEnglish = Object.freeze({
+  'Thông tin tổ chức': 'Organization information', 'Thông tin hệ thống': 'System information', 'Đăng ký & Liên hệ': 'Registration & contact',
   'Thông tin chung': 'General information', 'Thông tin cá nhân': 'Personal information', 'Định danh & Nghề nghiệp': 'Identification and occupation',
   'Liên lạc': 'Contact details', 'Địa chỉ': 'Address', 'Thông tin bổ sung': 'Additional information',
   'Lý do': 'Reason', 'Lý do đăng ký': 'Registration reason', 'Chi nhánh': 'Branch', 'Chọn chi nhánh': 'Select branch',
@@ -171,12 +186,21 @@ export function I18nProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
   }, [language]);
+  const repairedLegacyEnglish = useMemo(() => Object.fromEntries(
+    Object.entries(legacyEnglish).flatMap(([key, value]) => {
+      const repairedKey = repairMojibake(key);
+      return repairedKey === key ? [[key, value]] : [[key, value], [repairedKey, value]];
+    })
+  ), []);
   const value = useMemo(() => ({
     language,
     locale: language === 'en' ? 'en-US' : 'vi-VN',
     setLanguage,
-    t: (key) => messages[language][key] ?? messages.vi[key] ?? key,
-    translate: (text) => language === 'en' ? (legacyEnglish[text] || text) : text
-  }), [language]);
+    t: (key) => repairMojibake(messages[language][key] ?? messages.vi[key] ?? key),
+    translate: (text) => {
+      const normalized = repairMojibake(text);
+      return language === 'en' ? (repairedLegacyEnglish[normalized] || repairedLegacyEnglish[text] || normalized) : normalized;
+    }
+  }), [language, repairedLegacyEnglish]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
