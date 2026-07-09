@@ -7,6 +7,26 @@
 .cash-flow-heading {
   margin-bottom: 24px;
 }
+.cash-flow-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cash-flow-heading-row button {
+  min-height: 38px;
+  border: 1px solid #d7deea;
+  border-radius: 10px;
+  padding: 0 13px;
+  background: #fff;
+  color: #172033;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cash-flow-heading-row button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
 .cash-flow-heading h1 {
   margin: 4px 0 6px;
   font-size: 30px;

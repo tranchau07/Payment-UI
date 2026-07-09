@@ -29,6 +29,7 @@ export default function TransactionSearch() {
   const [page, setPage] = useState(null);
   const [metadata, setMetadata] = useState({});
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState('');
   const queryKey = searchParams.toString();
 
@@ -71,9 +72,15 @@ export default function TransactionSearch() {
   };
   const clear = () => { setFilters(readFilters(new URLSearchParams())); setSearchParams({ page: '0' }); };
   const goPage = (number) => { const next = new URLSearchParams(searchParams); next.set('page', String(number)); setLoading(true); setError(''); setSearchParams(next); };
+  const exportResults = async (format = 'XLSX') => {
+    setExporting(true); setError('');
+    try { await transactionService.exportSearch(apiParams, format); }
+    catch { setError(t('export.failed')); }
+    finally { setExporting(false); }
+  };
 
   return <section className="transaction-search-page">
-    <header className="page-header-container"><h2>{t('transaction.searchTitle')}</h2></header>
+    <header className="page-header-container exportable-header"><h2>{t('transaction.searchTitle')}</h2><button type="button" onClick={() => exportResults('XLSX')} disabled={exporting}>{exporting ? t('common.processing') : t('export.xlsx')}</button></header>
     <form className="transaction-filter card" onSubmit={submit}>
       <label>{t('transaction.keyword')}<input name="keyword" value={filters.keyword} onChange={change} placeholder={t('transaction.keywordPlaceholder')} /></label>
       <label>{t('transaction.fromDate')}<input type="date" name="startDate" value={filters.startDate} onChange={change} /></label>
@@ -86,7 +93,7 @@ export default function TransactionSearch() {
         <label>{t('transaction.contractId')}<input name="contractId" inputMode="numeric" value={filters.contractId} onChange={change} /></label>
         <label>{t('transaction.returnCode')}<input name="returnCode" inputMode="numeric" value={filters.returnCode} onChange={change} /></label>
       </div></details>
-      <div className="filter-actions"><button type="button" onClick={clear}>{t('common.clear')}</button><button type="submit" className="submit-button">{t('common.search')}</button></div>
+      <div className="filter-actions"><button type="button" onClick={clear}>{t('common.clear')}</button><button type="button" onClick={() => exportResults('CSV')} disabled={exporting}>{t('export.csv')}</button><button type="submit" className="submit-button">{t('common.search')}</button></div>
     </form>
 
     <DataState loading={loading} error={error} onRetry={load} empty={!page?.content?.length}

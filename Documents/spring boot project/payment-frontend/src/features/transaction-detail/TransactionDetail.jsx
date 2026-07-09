@@ -26,6 +26,7 @@ export default function TransactionDetail() {
   const docId = location.pathname.split('/').filter(Boolean).at(-1);
   const [data, setData] = useState(null); const [loading, setLoading] = useState(true);
   const [error, setError] = useState(''); const [tab, setTab] = useState('overview');
+  const [exporting, setExporting] = useState(false);
   const load = () => { setLoading(true); setError(''); transactionService.getById(docId).then(({ data: value }) => setData(value))
     .catch(() => setError(t('transaction.detailLoadError'))).finally(() => setLoading(false)); };
   useEffect(() => {
@@ -35,11 +36,22 @@ export default function TransactionDetail() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [docId, t]);
+  const exportFile = async (kind) => {
+    setExporting(true); setError('');
+    try {
+      if (kind === 'legs') await transactionService.exportPostingLegs(docId, 'XLSX');
+      else await transactionService.exportDetail(docId, 'PDF');
+    } catch {
+      setError(t('export.failed'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return <section className="transaction-detail-page"><Link to="/transactions" className="back-link">{t('transaction.list')}</Link>
     <DataState loading={loading} error={error} onRetry={load} empty={!data}>
       {data && <><header className="transaction-detail-header card"><div><span>{t('transaction.type')} #{data.id}</span><h2>{data.transactionTypeName || t('common.unclassified')}</h2>{data.details && <p>{data.details}</p>}</div>
-        <div><MoneyAmount value={data.amount} currency={data.currency} /><StatusBadge code={data.postingStatus} /></div></header>
+        <div><MoneyAmount value={data.amount} currency={data.currency} /><StatusBadge code={data.postingStatus} /><div className="export-actions"><button type="button" onClick={() => exportFile('detail')} disabled={exporting}>{t('export.pdf')}</button><button type="button" onClick={() => exportFile('legs')} disabled={exporting}>{t('export.postingLegs')}</button></div></div></header>
         <DetailTabs tabs={tabs} active={tab} onChange={setTab} />
         <div className="detail-tab-panel card">
           {tab === 'overview' && <div className="business-grid"><Field label={t('transaction.time')}>{dateTime(data.transactionDate, locale)}</Field><Field label={t('transaction.postingDate')}>{dateTime(data.postingDate, locale)}</Field>

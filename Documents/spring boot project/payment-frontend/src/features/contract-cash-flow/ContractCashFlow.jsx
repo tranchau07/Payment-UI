@@ -34,6 +34,7 @@ export default function ContractCashFlow() {
   const [history, setHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -79,6 +80,14 @@ export default function ContractCashFlow() {
     navigate(`/transactions/${docId}`);
   };
 
+  const exportCashFlow = async () => {
+    setExporting(true);
+    setError('');
+    try { await docService.exportContractCashFlows('XLSX'); }
+    catch { setError(t('export.failed')); }
+    finally { setExporting(false); }
+  };
+
   const getDirection = (doc) => {
     const contractId = Number(selectedContract?.contractId);
     const isSource = Number(doc.sourceContract) === contractId;
@@ -121,7 +130,7 @@ export default function ContractCashFlow() {
   return (
     <section className="cash-flow-page">
       <header className="cash-flow-heading">
-        <h1>{t('cashFlow.title')}</h1>
+        <div className="cash-flow-heading-row"><h1>{t('cashFlow.title')}</h1><button type="button" onClick={exportCashFlow} disabled={exporting}>{exporting ? t('common.processing') : t('export.xlsx')}</button></div>
       </header>
 
       <div className="cash-flow-overview">
